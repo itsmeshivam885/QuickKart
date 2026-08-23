@@ -1,0 +1,44 @@
+export const initializeSocket = (io) => {
+  io.on('connection', (socket) => {
+    // Register user to personal room
+    socket.on('join_user', (userId) => {
+      if (userId) {
+        socket.join(`user_${userId}`);
+      }
+    });
+
+    // Register shopkeeper to their shop broadcast room
+    socket.on('join_shop', (shopId) => {
+      if (shopId) {
+        socket.join(`shop_${shopId}`);
+      }
+    });
+
+    // Join specific conversation room
+    socket.on('join_conversation', (conversationId) => {
+      if (conversationId) {
+        socket.join(`conversation_${conversationId}`);
+      }
+    });
+
+    // Leave conversation room
+    socket.on('leave_conversation', (conversationId) => {
+      if (conversationId) {
+        socket.leave(`conversation_${conversationId}`);
+      }
+    });
+
+    // Handle typing indicator
+    socket.on('typing_start', ({ conversationId, senderName }) => {
+      socket.to(`conversation_${conversationId}`).emit('user_typing', { conversationId, senderName });
+    });
+
+    socket.on('typing_stop', ({ conversationId }) => {
+      socket.to(`conversation_${conversationId}`).emit('user_stopped_typing', { conversationId });
+    });
+
+    socket.on('disconnect', () => {
+      // Clean disconnect
+    });
+  });
+};
