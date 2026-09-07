@@ -153,6 +153,18 @@ CREATE TABLE IF NOT EXISTS reviews (
 );
 
 -- ====================================================================
+-- DISABLE ROW LEVEL SECURITY (Allows backend API to read/write freely)
+-- ====================================================================
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE shops DISABLE ROW LEVEL SECURITY;
+ALTER TABLE products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE requests DISABLE ROW LEVEL SECURITY;
+ALTER TABLE request_responses DISABLE ROW LEVEL SECURITY;
+ALTER TABLE reservations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews DISABLE ROW LEVEL SECURITY;
+
+-- ====================================================================
 -- SEED INITIAL DATA (Test Accounts, Verified Stores & Products)
 -- Passwords are all hashed for 'password123'
 -- ====================================================================
