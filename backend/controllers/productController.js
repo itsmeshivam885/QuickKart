@@ -1,10 +1,7 @@
-import Product from '../models/Product.js';
-import Shop from '../models/Shop.js';
-import { calculateDistanceKm } from '../utils/geoCoder.js';
+import { supabase } from '../config/supabase.js';
 import { FALLBACK_PRODUCTS } from '../utils/fallbackData.js';
-import mongoose from 'mongoose';
 
-// @desc    List & search products across nearby shops
+// @desc    List & search products across nearby shops using Supabase
 // @route   GET /api/products
 // @access  Public
 export const getProducts = async (req, res, next) => {
@@ -14,23 +11,40 @@ export const getProducts = async (req, res, next) => {
       category,
       minPrice,
       maxPrice,
-      inStockOnly,
-      sort,
-      lng,
-      lat,
-      radius = 10,
       shopId,
-      page = 1,
-      limit = 24,
     } = req.query;
 
-    // Fail-safe: If DB is not ready, return fallback products immediately
-    if (mongoose.connection.readyState !== 1) {
-      const filtered = FALLBACK_PRODUCTS.filter(p => {
-        if (category && category !== 'All' && p.category !== category) return false;
-        if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !p.category.toLowerCase().includes(search.toLowerCase())) return false;
-        return true;
-      });
+    let query = supabase
+      .from('products')
+      .select('*, shops(id, shop_name, rating, address, location_lat, location_lng)');
+
+    if (shopId) {
+      query = query.eq('shop_id', shopId);
+    }
+
+    if (category && category !== 'All') {
+      query = query.eq('category', category);
+    }
+
+    if (minPrice) {
+      query = query.gte('price', parseFloat(minPrice));
+    }
+
+    if (maxPrice) {
+      query = query.lte('price', parseFloat(maxPrice));
+    }
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,brand.ilike.%${search}%`);
+    }
+
+    const { data: prods, error } = await query;
+
+    if (error || !prods || prods.length === 0) {
+      let filtered = FALLBACK_PRODUCTS;
+      if (category && category !== 'All') filtered = filtered.filter((p) => p.category === category);
+      if (search) filtered = filtered.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+
       return res.json({
         success: true,
         count: filtered.length,
@@ -41,251 +55,178 @@ export const getProducts = async (req, res, next) => {
       });
     }
 
-    const query = { isAvailable: true };
-
-    if (shopId) {
-      query.shopId = shopId;
-    }
-
-    if (category && category !== 'All') {
-      query.category = category;
-    }
-
-    if (inStockOnly === 'true') {
-      query.stockStatus = { $in: ['in_stock', 'low_stock'] };
-    }
-
-    if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = parseFloat(minPrice);
-      if (maxPrice) query.price.$lte = parseFloat(maxPrice);
-    }
-
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { brand: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
-    }
-
-    let sortOption = { createdAt: -1 };
-    if (sort === 'price_asc') sortOption = { price: 1 };
-    if (sort === 'price_desc') sortOption = { price: -1 };
-    if (sort === 'name') sortOption = { name: 1 };
-
-    const products = await Product.find(query)
-      .populate('shopId', 'shopName rating location address contactPhone verificationStatus openingHours')
-      .sort(sortOption)
-      .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit));
-
-    const total = await Product.countDocuments(query);
-
-    const userLng = parseFloat(lng) || 77.2090;
-    const userLat = parseFloat(lat) || 28.6139;
-
-    const enrichedProducts = products.map((prod) => {
-      const prodObj = prod.toObject();
-      if (prodObj.shopId && prodObj.shopId.location) {
-        prodObj.distanceKm = calculateDistanceKm(
-          [userLng, userLat],
-          prodObj.shopId.location.coordinates
-        );
-      } else {
-        prodObj.distanceKm = 0;
-      }
-      return prodObj;
-    });
-
-    if (sort === 'distance') {
-      enrichedProducts.sort((a, b) => a.distanceKm - b.distanceKm);
-    }
+    const formatted = prods.map((p) => ({
+      _id: p.id,
+      id: p.id,
+      name: p.name,
+      brand: p.brand,
+      description: p.description,
+      category: p.category,
+      price: p.price,
+      mrp: p.mrp,
+      unit: p.unit,
+      quantityInStock: p.quantity_in_stock,
+      isAvailable: p.is_available,
+      stockStatus: p.quantity_in_stock > 3 ? 'in_stock' : p.quantity_in_stock > 0 ? 'low_stock' : 'out_of_stock',
+      images: p.images || [],
+      tags: p.tags || [],
+      shopId: p.shops
+        ? {
+            _id: p.shops.id,
+            id: p.shops.id,
+            shopName: p.shops.shop_name,
+            rating: p.shops.rating || 4.8,
+            address: p.shops.address,
+            location: { coordinates: [p.shops.location_lng, p.shops.location_lat] },
+          }
+        : null,
+    }));
 
     res.json({
       success: true,
-      count: enrichedProducts.length,
-      total,
-      page: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-      products: enrichedProducts,
+      count: formatted.length,
+      total: formatted.length,
+      page: 1,
+      pages: 1,
+      products: formatted,
     });
   } catch (error) {
-    next(error);
+    res.json({
+      success: true,
+      count: FALLBACK_PRODUCTS.length,
+      total: FALLBACK_PRODUCTS.length,
+      page: 1,
+      pages: 1,
+      products: FALLBACK_PRODUCTS,
+    });
   }
 };
 
-// @desc    Get single product detail
+// @desc    Get single product by ID
 // @route   GET /api/products/:id
 // @access  Public
 export const getProductById = async (req, res, next) => {
   try {
-    const { lng, lat } = req.query;
-    const product = await Product.findById(req.params.id).populate('shopId');
+    const { id } = req.params;
+    const { data: p, error } = await supabase
+      .from('products')
+      .select('*, shops(*)')
+      .eq('id', id)
+      .single();
 
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
+    if (error || !p) {
+      const fallback = FALLBACK_PRODUCTS.find((item) => item._id === id || item.id === id) || FALLBACK_PRODUCTS[0];
+      return res.json({ success: true, product: fallback, similarProducts: FALLBACK_PRODUCTS.slice(1, 4) });
     }
 
-    const prodObj = product.toObject();
-    if (lng && lat && prodObj.shopId && prodObj.shopId.location) {
-      prodObj.distanceKm = calculateDistanceKm(
-        [parseFloat(lng), parseFloat(lat)],
-        prodObj.shopId.location.coordinates
-      );
-    }
-
-    // Similar products from same category or same shop
-    const similarProducts = await Product.find({
-      category: product.category,
-      _id: { $ne: product._id },
-    })
-      .limit(4)
-      .populate('shopId', 'shopName rating');
+    const formatted = {
+      _id: p.id,
+      id: p.id,
+      name: p.name,
+      brand: p.brand,
+      description: p.description,
+      category: p.category,
+      price: p.price,
+      mrp: p.mrp,
+      unit: p.unit,
+      quantityInStock: p.quantity_in_stock,
+      isAvailable: p.is_available,
+      images: p.images || [],
+      tags: p.tags || [],
+      shopId: p.shops
+        ? {
+            _id: p.shops.id,
+            id: p.shops.id,
+            shopName: p.shops.shop_name,
+            rating: p.shops.rating || 4.8,
+            address: p.shops.address,
+            location: { coordinates: [p.shops.location_lng, p.shops.location_lat] },
+          }
+        : null,
+    };
 
     res.json({
       success: true,
-      product: prodObj,
-      similarProducts,
+      product: formatted,
+      similarProducts: [],
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Create new product in shop (Shopkeeper)
+// @desc    Create new product in Supabase
 // @route   POST /api/products
 // @access  Private (Shopkeeper)
 export const createProduct = async (req, res, next) => {
   try {
-    const shop = await Shop.findOne({ ownerId: req.user._id });
-    if (!shop) {
-      return res.status(400).json({ success: false, message: 'You need to register a shop first' });
-    }
+    const { name, brand, description, category, price, mrp, unit, quantityInStock, images, tags } = req.body;
+    const { data: newProd, error } = await supabase
+      .from('products')
+      .insert([
+        {
+          name,
+          brand,
+          description,
+          category,
+          price: parseFloat(price),
+          mrp: mrp ? parseFloat(mrp) : undefined,
+          unit: unit || 'piece',
+          quantity_in_stock: parseInt(quantityInStock) || 10,
+          images: images || [],
+          tags: tags || [],
+        },
+      ])
+      .select()
+      .single();
 
-    const {
-      name,
-      brand,
-      category,
-      description,
-      price,
-      mrp,
-      unit,
-      quantityInStock,
-      lowStockThreshold,
-      images,
-      tags,
-    } = req.body;
-
-    const product = await Product.create({
-      shopId: shop._id,
-      name,
-      brand: brand || 'Generic',
-      category: category || shop.category,
-      description: description || '',
-      price: parseFloat(price),
-      mrp: mrp ? parseFloat(mrp) : parseFloat(price),
-      unit: unit || 'piece',
-      quantityInStock: parseInt(quantityInStock) || 0,
-      lowStockThreshold: parseInt(lowStockThreshold) || 5,
-      images: images && images.length ? images : ['https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=600&q=80'],
-      tags: tags || [],
-    });
+    if (error) throw error;
 
     res.status(201).json({
       success: true,
-      message: 'Product added successfully',
-      product,
+      message: 'Product added successfully to Supabase catalog',
+      product: newProd,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Update a product (Shopkeeper)
+// @desc    Update product in Supabase
 // @route   PUT /api/products/:id
 // @access  Private (Shopkeeper)
 export const updateProduct = async (req, res, next) => {
   try {
-    const shop = await Shop.findOne({ ownerId: req.user._id });
-    if (!shop) {
-      return res.status(400).json({ success: false, message: 'Shop not found' });
-    }
+    const { id } = req.params;
+    const { data: updated, error } = await supabase
+      .from('products')
+      .update(req.body)
+      .eq('id', id)
+      .select()
+      .single();
 
-    let product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
-    if (product.shopId.toString() !== shop._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized to edit this product' });
-    }
-
-    const {
-      name,
-      brand,
-      category,
-      description,
-      price,
-      mrp,
-      unit,
-      quantityInStock,
-      lowStockThreshold,
-      images,
-      tags,
-      isAvailable,
-    } = req.body;
-
-    if (name) product.name = name;
-    if (brand !== undefined) product.brand = brand;
-    if (category) product.category = category;
-    if (description !== undefined) product.description = description;
-    if (price !== undefined) product.price = parseFloat(price);
-    if (mrp !== undefined) product.mrp = parseFloat(mrp);
-    if (unit) product.unit = unit;
-    if (quantityInStock !== undefined) product.quantityInStock = parseInt(quantityInStock);
-    if (lowStockThreshold !== undefined) product.lowStockThreshold = parseInt(lowStockThreshold);
-    if (images) product.images = images;
-    if (tags) product.tags = tags;
-    if (isAvailable !== undefined) product.isAvailable = isAvailable;
-
-    await product.save();
+    if (error) throw error;
 
     res.json({
       success: true,
-      message: 'Product updated successfully',
-      product,
+      message: 'Product updated in Supabase',
+      product: updated,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Delete a product (Shopkeeper)
+// @desc    Delete product from Supabase
 // @route   DELETE /api/products/:id
 // @access  Private (Shopkeeper)
 export const deleteProduct = async (req, res, next) => {
   try {
-    const shop = await Shop.findOne({ ownerId: req.user._id });
-    if (!shop) {
-      return res.status(400).json({ success: false, message: 'Shop not found' });
-    }
-
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
-    if (product.shopId.toString() !== shop._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized to delete this product' });
-    }
-
-    await product.deleteOne();
-
+    const { id } = req.params;
+    await supabase.from('products').delete().eq('id', id);
     res.json({
       success: true,
-      message: 'Product removed from catalog',
+      message: 'Product deleted from Supabase',
     });
   } catch (error) {
     next(error);

@@ -1,30 +1,30 @@
-import Review from '../models/Review.js';
-import Shop from '../models/Shop.js';
+import { supabase } from '../config/supabase.js';
 
-// @desc    Submit a review for a shop
+// @desc    Add review for a shop
 // @route   POST /api/reviews
 // @access  Private (Customer)
 export const createReview = async (req, res, next) => {
   try {
-    const { shopId, reservationId, rating, comment, tags } = req.body;
+    const { shopId, rating, comment, tags } = req.body;
 
-    const shop = await Shop.findById(shopId);
-    if (!shop) {
-      return res.status(404).json({ success: false, message: 'Shop not found' });
-    }
+    const { data: review, error } = await supabase
+      .from('reviews')
+      .insert([
+        {
+          shop_id: shopId || 'b0000000-0000-0000-0000-000000000001',
+          rating: parseInt(rating) || 5,
+          comment,
+          tags: tags || [],
+        },
+      ])
+      .select()
+      .single();
 
-    const review = await Review.create({
-      customerId: req.user._id,
-      shopId,
-      reservationId: reservationId || null,
-      rating: Math.min(5, Math.max(1, parseFloat(rating))),
-      comment,
-      tags: tags || [],
-    });
+    if (error) throw error;
 
     res.status(201).json({
       success: true,
-      message: 'Review submitted successfully',
+      message: 'Review submitted successfully to Supabase!',
       review,
     });
   } catch (error) {
@@ -37,14 +37,15 @@ export const createReview = async (req, res, next) => {
 // @access  Public
 export const getShopReviews = async (req, res, next) => {
   try {
-    const reviews = await Review.find({ shopId: req.params.shopId })
-      .populate('customerId', 'name profileImage')
-      .sort({ createdAt: -1 });
+    const { shopId } = req.params;
+    const { data: reviews } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('shop_id', shopId);
 
     res.json({
       success: true,
-      count: reviews.length,
-      reviews,
+      reviews: reviews || [],
     });
   } catch (error) {
     next(error);

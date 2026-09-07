@@ -1,46 +1,64 @@
-import User from '../models/User.js';
-import Shop from '../models/Shop.js';
+import { supabase } from '../config/supabase.js';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'quickkart_jwt_secret_key_2026_super_secure', {
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'quickkart_jwt_secret', {
     expiresIn: '30d',
   });
 };
 
-// @desc    Register a new user (Customer or Shopkeeper)
+// @desc    Register a new user in Supabase
 // @route   POST /api/auth/register
 // @access  Public
-export const register = async (req, res, next) => {
+export const registerUser = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role, address } = req.body;
+    const { name, email, password, role = 'customer', phone, address } = req.body;
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ success: false, message: 'User with this email already exists' });
+    // Check if user already exists
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'User already exists with this email' });
     }
 
-    const user = await User.create({
-      name,
-      email,
-      password,
-      phone: phone || '',
-      role: role || 'customer',
-      address: address || {},
-    });
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
 
-    const token = generateToken(user._id);
+    const { data: user, error } = await supabase
+      .from('users')
+      .insert([
+        {
+          name,
+          email: email.toLowerCase(),
+          password_hash: passwordHash,
+          role,
+          phone,
+          address: address || {},
+          status: 'active',
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const token = generateToken(user.id, user.role);
 
     res.status(201).json({
       success: true,
       token,
       user: {
-        _id: user._id,
+        _id: user.id,
+        id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
         role: user.role,
-        profileImage: user.profileImage,
+        phone: user.phone,
         address: user.address,
       },
     });
@@ -49,124 +67,69 @@ export const register = async (req, res, next) => {
   }
 };
 
-// @desc    Authenticate user & get token
+// @desc    Login user in Supabase
 // @route   POST /api/auth/login
 // @access  Public
-export const login = async (req, res, next) => {
+export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Please provide email and password' });
-    }
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .single();
 
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
+    if (error || !user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    if (user.status === 'suspended') {
-      return res.status(403).json({ success: false, message: 'Account is suspended. Please contact support.' });
-    }
-
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    const token = generateToken(user._id);
-
-    // If shopkeeper, find their shop
-    let shop = null;
-    if (user.role === 'shopkeeper') {
-      shop = await Shop.findOne({ ownerId: user._id });
-    }
+    const token = generateToken(user.id, user.role);
 
     res.json({
       success: true,
       token,
       user: {
-        _id: user._id,
+        _id: user.id,
+        id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
         role: user.role,
-        profileImage: user.profileImage,
+        phone: user.phone,
         address: user.address,
-        shopId: shop ? shop._id : null,
       },
-      shop,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get current logged in user
+// @desc    Get current user profile
 // @route   GET /api/auth/me
 // @access  Private
 export const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id);
-    let shop = null;
-    if (user.role === 'shopkeeper') {
-      shop = await Shop.findOne({ ownerId: user._id });
-    }
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, name, email, role, phone, address, status')
+      .eq('id', req.user.id)
+      .single();
 
-    res.json({
-      success: true,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        profileImage: user.profileImage,
-        address: user.address,
-        shopId: shop ? shop._id : null,
-      },
-      shop,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Update user profile
-// @route   PUT /api/auth/profile
-// @access  Private
-export const updateProfile = async (req, res, next) => {
-  try {
-    const { name, phone, address, profileImage } = req.body;
-    const user = await User.findById(req.user._id);
-
-    if (!user) {
+    if (error || !user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if (name) user.name = name;
-    if (phone !== undefined) user.phone = phone;
-    if (profileImage) user.profileImage = profileImage;
-    if (address) {
-      user.address = {
-        ...user.address,
-        ...address,
-      };
-    }
-
-    await user.save();
-
     res.json({
       success: true,
-      message: 'Profile updated successfully',
       user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        profileImage: user.profileImage,
-        address: user.address,
+        _id: user.id,
+        id: user.id,
+        ...user,
       },
     });
   } catch (error) {

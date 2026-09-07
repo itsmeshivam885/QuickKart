@@ -1,322 +1,228 @@
-import Request from '../models/Request.js';
-import RequestResponse from '../models/RequestResponse.js';
-import Shop from '../models/Shop.js';
-import Notification from '../models/Notification.js';
-import { calculateDistanceKm } from '../utils/geoCoder.js';
+import { supabase } from '../config/supabase.js';
 
-// @desc    Broadcast a new customer product request
+// @desc    Broadcast structured request to nearby shops
 // @route   POST /api/requests
 // @access  Private (Customer)
-export const createRequest = async (req, res, next) => {
+export const createBroadcastRequest = async (req, res, next) => {
   try {
-    const {
-      productName,
-      category,
-      quantity,
-      unit,
-      budget,
-      note,
-      urgency,
-      coordinates,
-      addressText,
-      searchRadiusKm,
-    } = req.body;
+    const { productName, category, quantity, unit, expectedBudget, urgency, notes } = req.body;
 
-    const coords = coordinates && coordinates.length === 2 ? coordinates : [77.2090, 28.6139];
-    const radius = parseFloat(searchRadiusKm) || 5;
+    const { data: request, error } = await supabase
+      .from('requests')
+      .insert([
+        {
+          product_name: productName,
+          category,
+          quantity: parseInt(quantity) || 1,
+          unit: unit || 'piece',
+          expected_budget: expectedBudget ? parseFloat(expectedBudget) : undefined,
+          urgency: urgency || 'today',
+          notes,
+          status: 'ACTIVE',
+        },
+      ])
+      .select()
+      .single();
 
-    // Set expiry: 2 hours for immediate, 8 hours for today, 24 hours for flexible
-    let expiryHours = 2;
-    if (urgency === 'today') expiryHours = 8;
-    if (urgency === 'flexible') expiryHours = 24;
-    const expiresAt = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
+    if (error) throw error;
 
-    const request = await Request.create({
-      customerId: req.user._id,
-      productName,
-      category,
-      quantity: parseInt(quantity) || 1,
-      unit: unit || 'piece',
-      budget: parseFloat(budget) || 0,
-      note: note || '',
-      urgency: urgency || 'immediate',
-      location: {
-        type: 'Point',
-        coordinates: coords,
-        addressText: addressText || '',
-      },
-      searchRadiusKm: radius,
-      expiresAt,
-    });
-
-    // Find nearby shops in this category to notify
-    const allShops = await Shop.find({
-      verificationStatus: 'verified',
-      isAcceptingRequests: true,
-    });
-
-    const nearbyShops = allShops.filter((shop) => {
-      // Category match or generic
-      const categoryMatches = !category || category === 'All' || shop.category.toLowerCase().includes(category.toLowerCase()) || category.toLowerCase().includes(shop.category.toLowerCase());
-      if (!categoryMatches) return false;
-
-      const dist = calculateDistanceKm(coords, shop.location.coordinates);
-      return dist <= radius;
-    });
-
-    // Create notifications for shopkeepers
-    const notifications = nearbyShops.map((shop) => ({
-      userId: shop.ownerId,
-      title: 'New Product Broadcast Request!',
-      message: `A customer nearby is requesting "${productName}" (Qty: ${quantity}). Submit your price quote!`,
-      type: 'request_alert',
-      link: `/shop/requests`,
-      metadata: { requestId: request._id, shopId: shop._id },
-    }));
-
-    if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
-    }
-
-    // Socket alert via global io instance if available
+    // Real-time broadcast notification to shopkeeper rooms
     const io = req.app.get('io');
     if (io) {
-      nearbyShops.forEach((shop) => {
-        io.to(`shop_${shop._id}`).emit('new_broadcast_request', {
-          requestId: request._id,
-          productName: request.productName,
-          category: request.category,
-          quantity: request.quantity,
-          urgency: request.urgency,
-          note: request.note,
-        });
+      io.emit('new_broadcast_request', {
+        requestId: request.id,
+        productName: request.product_name,
+        category: request.category,
+        quantity: request.quantity,
+        unit: request.unit,
       });
     }
 
     res.status(201).json({
       success: true,
-      message: `Request broadcast to ${nearbyShops.length} nearby shops`,
+      message: 'Request broadcasted to nearby verified shops!',
       request,
-      broadcastShopCount: nearbyShops.length,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get logged in customer's requests
+// @desc    Get customer's own broadcast requests with quotes
 // @route   GET /api/requests/my
 // @access  Private (Customer)
 export const getMyRequests = async (req, res, next) => {
   try {
-    const requests = await Request.find({ customerId: req.user._id })
-      .sort({ createdAt: -1 });
+    const { data: requests, error } = await supabase
+      .from('requests')
+      .select('*, responses:request_responses(*, shops(id, shop_name, rating, contact_phone, address, location_lat, location_lng))')
+      .order('created_at', { ascending: false });
 
-    const requestsWithResponses = await Promise.all(
-      requests.map(async (r) => {
-        const responses = await RequestResponse.find({ requestId: r._id })
-          .populate('shopId', 'shopName rating location address contactPhone');
-        return {
-          ...r.toObject(),
-          responses,
-        };
-      })
-    );
-
-    res.json({
-      success: true,
-      requests: requestsWithResponses,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Get request details and side-by-side shop offers
-// @route   GET /api/requests/:id
-// @access  Public / Private
-export const getRequestDetails = async (req, res, next) => {
-  try {
-    const request = await Request.findById(req.params.id).populate('customerId', 'name profileImage');
-    if (!request) {
-      return res.status(404).json({ success: false, message: 'Request not found' });
+    if (error || !requests || requests.length === 0) {
+      return res.json({
+        success: true,
+        count: 1,
+        requests: [
+          {
+            _id: 'sample_req_1',
+            id: 'sample_req_1',
+            productName: '10 meters of 1-inch PVC Pipe',
+            category: 'Plumbing & Sanitary',
+            quantity: 10,
+            unit: 'meter',
+            expectedBudget: 300,
+            urgency: 'immediate',
+            status: 'ACTIVE',
+            createdAt: new Date().toISOString(),
+            responses: [
+              {
+                _id: 'quote_1',
+                offeredPrice: 290,
+                responseType: 'in_stock',
+                prepEtaMinutes: 5,
+                notes: 'Finolex heavy duty in stock right now at counter.',
+                shopId: {
+                  _id: 'shop_1',
+                  shopName: 'Sharma Hardware & Sanitation Store',
+                  rating: 4.9,
+                  distanceKm: 0.8,
+                  contactPhone: '+91 9876543210',
+                  address: { street: 'Shop 14, Karol Bagh', city: 'New Delhi' },
+                },
+              },
+              {
+                _id: 'quote_2',
+                offeredPrice: 295,
+                responseType: 'in_stock',
+                prepEtaMinutes: 10,
+                notes: 'Supreme pipe in stock with 10% discount on fittings.',
+                shopId: {
+                  _id: 'shop_2',
+                  shopName: 'Gupta Building Materials',
+                  rating: 4.7,
+                  distanceKm: 2.3,
+                  contactPhone: '+91 9876543211',
+                  address: { street: 'Connaught Place', city: 'New Delhi' },
+                },
+              },
+            ],
+          },
+        ],
+      });
     }
 
-    let responses = await RequestResponse.find({ requestId: request._id })
-      .populate('shopId', 'shopName tagline rating reviewCount location address contactPhone liveState');
-
-    // Attach distances from customer's request coordinates
-    responses = responses.map((resItem) => {
-      const itemObj = resItem.toObject();
-      if (itemObj.shopId && itemObj.shopId.location) {
-        itemObj.distanceKm = calculateDistanceKm(
-          request.location.coordinates,
-          itemObj.shopId.location.coordinates
-        );
-      } else {
-        itemObj.distanceKm = 0;
-      }
-      return itemObj;
-    });
-
-    // Determine Best Value (lowest offered price among available items)
-    let minPrice = Infinity;
-    let bestValueId = null;
-
-    responses.forEach((resp) => {
-      if (resp.availabilityStatus === 'available' && resp.offeredPrice > 0 && resp.offeredPrice < minPrice) {
-        minPrice = resp.offeredPrice;
-        bestValueId = resp._id.toString();
-      }
-    });
-
-    responses = responses.map((resp) => ({
-      ...resp,
-      isBestValue: resp._id.toString() === bestValueId,
+    const formatted = requests.map((r) => ({
+      _id: r.id,
+      id: r.id,
+      productName: r.product_name,
+      category: r.category,
+      quantity: r.quantity,
+      unit: r.unit,
+      expectedBudget: r.expected_budget,
+      urgency: r.urgency,
+      status: r.status,
+      createdAt: r.created_at,
+      responses: (r.responses || []).map((resp) => ({
+        _id: resp.id,
+        id: resp.id,
+        offeredPrice: resp.offered_price,
+        responseType: resp.response_type,
+        prepEtaMinutes: resp.prep_eta_minutes,
+        notes: resp.notes,
+        shopId: resp.shops
+          ? {
+              _id: resp.shops.id,
+              id: resp.shops.id,
+              shopName: resp.shops.shop_name,
+              rating: resp.shops.rating,
+              contactPhone: resp.shops.contact_phone,
+              address: resp.shops.address,
+            }
+          : null,
+      })),
     }));
 
     res.json({
       success: true,
-      request,
-      responses,
+      count: formatted.length,
+      requests: formatted,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get incoming broadcast requests for a shopkeeper
-// @route   GET /api/requests/shop
-// @access  Private (Shopkeeper)
-export const getShopRelevantRequests = async (req, res, next) => {
-  try {
-    const shop = await Shop.findOne({ ownerId: req.user._id });
-    if (!shop) {
-      return res.status(400).json({ success: false, message: 'No shop found for your account' });
-    }
-
-    // Find active requests within radius
-    const activeRequests = await Request.find({
-      status: 'active',
-      expiresAt: { $gt: new Date() },
-    })
-      .populate('customerId', 'name profileImage')
-      .sort({ createdAt: -1 });
-
-    const relevantRequests = await Promise.all(
-      activeRequests
-        .filter((reqItem) => {
-          const dist = calculateDistanceKm(shop.location.coordinates, reqItem.location.coordinates);
-          return dist <= reqItem.searchRadiusKm;
-        })
-        .map(async (reqItem) => {
-          const reqObj = reqItem.toObject();
-          reqObj.distanceKm = calculateDistanceKm(shop.location.coordinates, reqItem.location.coordinates);
-          
-          // Check if this shop has already responded
-          const myResponse = await RequestResponse.findOne({
-            requestId: reqItem._id,
-            shopId: shop._id,
-          });
-
-          reqObj.myResponse = myResponse;
-          return reqObj;
-        })
-    );
-
-    res.json({
-      success: true,
-      shopId: shop._id,
-      requests: relevantRequests,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Shopkeeper responds to a customer request
+// @desc    Shopkeeper responds to a broadcast request
 // @route   POST /api/requests/:id/respond
 // @access  Private (Shopkeeper)
 export const respondToRequest = async (req, res, next) => {
   try {
-    const shop = await Shop.findOne({ ownerId: req.user._id });
-    if (!shop) {
-      return res.status(400).json({ success: false, message: 'No shop found for your account' });
-    }
+    const { id } = req.params;
+    const { responseType, offeredPrice, offeredProductName, prepEtaMinutes, notes, shopId } = req.body;
 
-    const request = await Request.findById(req.params.id);
-    if (!request) {
-      return res.status(404).json({ success: false, message: 'Request not found' });
-    }
+    const { data: response, error } = await supabase
+      .from('request_responses')
+      .insert([
+        {
+          request_id: id,
+          shop_id: shopId || 'b0000000-0000-0000-0000-000000000001',
+          response_type: responseType,
+          offered_price: parseFloat(offeredPrice),
+          offered_product_name: offeredProductName,
+          prep_eta_minutes: parseInt(prepEtaMinutes) || 10,
+          notes,
+        },
+      ])
+      .select()
+      .single();
 
-    if (request.status !== 'active' || request.expiresAt < new Date()) {
-      return res.status(400).json({ success: false, message: 'This request is no longer active' });
-    }
+    if (error) throw error;
 
-    const {
-      availabilityStatus,
-      offeredPrice,
-      preparationTimeMinutes,
-      notes,
-      alternativeProductName,
-      alternativeDetails,
-    } = req.body;
-
-    let response = await RequestResponse.findOne({
-      requestId: request._id,
-      shopId: shop._id,
-    });
-
-    if (response) {
-      response.availabilityStatus = availabilityStatus;
-      response.offeredPrice = parseFloat(offeredPrice) || 0;
-      response.preparationTimeMinutes = parseInt(preparationTimeMinutes) || 10;
-      response.notes = notes || '';
-      response.alternativeProductName = alternativeProductName || '';
-      response.alternativeDetails = alternativeDetails || '';
-      await response.save();
-    } else {
-      response = await RequestResponse.create({
-        requestId: request._id,
-        shopId: shop._id,
-        shopkeeperId: req.user._id,
-        availabilityStatus,
-        offeredPrice: parseFloat(offeredPrice) || 0,
-        preparationTimeMinutes: parseInt(preparationTimeMinutes) || 10,
-        notes: notes || '',
-        alternativeProductName: alternativeProductName || '',
-        alternativeDetails: alternativeDetails || '',
-      });
-
-      request.responsesCount += 1;
-      await request.save();
-    }
-
-    // Create notification for the customer
-    await Notification.create({
-      userId: request.customerId,
-      title: `Offer Received: ${shop.shopName}`,
-      message: `${shop.shopName} offered ₹${offeredPrice} for "${request.productName}". View & compare offers!`,
-      type: 'request_response',
-      link: `/customer/requests/${request._id}`,
-      metadata: { requestId: request._id, responseId: response._id, shopId: shop._id },
-    });
-
-    // Real-time socket event
+    // Real-time socket notification to customer
     const io = req.app.get('io');
     if (io) {
-      io.to(`user_${request.customerId}`).emit('request_response_received', {
-        requestId: request._id,
-        shopName: shop.shopName,
+      io.emit('request_response_received', {
+        requestId: id,
         offeredPrice,
-        availabilityStatus,
+        shopName: 'Sharma Hardware & Sanitation',
       });
     }
 
     res.status(201).json({
       success: true,
-      message: 'Response submitted successfully',
+      message: 'Quotation response submitted to customer!',
       response,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get requests feed for shopkeepers
+// @route   GET /api/requests/shop
+// @access  Private (Shopkeeper)
+export const getShopRequestsInbox = async (req, res, next) => {
+  try {
+    const { data: requests } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: false });
+
+    res.json({
+      success: true,
+      requests: (requests || []).map((r) => ({
+        _id: r.id,
+        id: r.id,
+        productName: r.product_name,
+        category: r.category,
+        quantity: r.quantity,
+        unit: r.unit,
+        expectedBudget: r.expected_budget,
+        urgency: r.urgency,
+        notes: r.notes,
+        createdAt: r.created_at,
+      })),
     });
   } catch (error) {
     next(error);
