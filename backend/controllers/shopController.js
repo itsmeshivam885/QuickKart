@@ -2,6 +2,8 @@ import Shop from '../models/Shop.js';
 import Product from '../models/Product.js';
 import Review from '../models/Review.js';
 import { calculateDistanceKm } from '../utils/geoCoder.js';
+import { FALLBACK_SHOPS } from '../utils/fallbackData.js';
+import mongoose from 'mongoose';
 
 // @desc    Get nearby shops with geospatial filtering & search
 // @route   GET /api/shops/nearby
@@ -21,6 +23,21 @@ export const getNearbyShops = async (req, res, next) => {
     const userLng = parseFloat(lng) || 77.2090; // Default New Delhi
     const userLat = parseFloat(lat) || 28.6139;
     const maxDistanceMeters = parseFloat(radius) * 1000;
+
+    // Fail-safe: If DB is buffering or not ready, return rich fallback data immediately
+    if (mongoose.connection.readyState !== 1) {
+      const filtered = FALLBACK_SHOPS.filter(s => {
+        if (category && category !== 'All' && s.category !== category) return false;
+        if (search && !s.shopName.toLowerCase().includes(search.toLowerCase()) && !s.category.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      });
+      return res.json({
+        success: true,
+        count: filtered.length,
+        userLocation: { lng: userLng, lat: userLat },
+        shops: filtered,
+      });
+    }
 
     let query = { verificationStatus: 'verified' };
 

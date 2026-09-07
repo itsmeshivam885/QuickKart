@@ -1,6 +1,8 @@
 import Product from '../models/Product.js';
 import Shop from '../models/Shop.js';
 import { calculateDistanceKm } from '../utils/geoCoder.js';
+import { FALLBACK_PRODUCTS } from '../utils/fallbackData.js';
+import mongoose from 'mongoose';
 
 // @desc    List & search products across nearby shops
 // @route   GET /api/products
@@ -21,6 +23,23 @@ export const getProducts = async (req, res, next) => {
       page = 1,
       limit = 24,
     } = req.query;
+
+    // Fail-safe: If DB is not ready, return fallback products immediately
+    if (mongoose.connection.readyState !== 1) {
+      const filtered = FALLBACK_PRODUCTS.filter(p => {
+        if (category && category !== 'All' && p.category !== category) return false;
+        if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !p.category.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      });
+      return res.json({
+        success: true,
+        count: filtered.length,
+        total: filtered.length,
+        page: 1,
+        pages: 1,
+        products: filtered,
+      });
+    }
 
     const query = { isAvailable: true };
 
