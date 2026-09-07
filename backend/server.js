@@ -52,7 +52,16 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-// API Health Check
+// Root & API Health Check
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'QuickKart Backend API is Online & Healthy',
+    docs: '/api/health',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
