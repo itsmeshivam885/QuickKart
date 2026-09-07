@@ -1,11 +1,18 @@
 import mongoose from 'mongoose';
-
-let mongod = null;
+import { checkSupabaseConnection } from './supabase.js';
 
 export const connectDB = async () => {
   const mongoUri = process.env.MONGODB_URI;
+  const supabaseUrl = process.env.SUPABASE_URL;
 
-  // In production (Render/Cloud) or if MONGODB_URI is specified
+  // 1. Check Supabase connection
+  if (supabaseUrl && supabaseUrl.startsWith('http')) {
+    console.log('[Database] Initializing Supabase PostgreSQL connection...');
+    await checkSupabaseConnection();
+    return;
+  }
+
+  // 2. Check MongoDB Atlas connection
   if (mongoUri && mongoUri.startsWith('mongodb')) {
     try {
       console.log('[Database] Connecting to MongoDB Atlas Cluster...');
@@ -17,32 +24,14 @@ export const connectDB = async () => {
       return;
     } catch (err) {
       console.error(`[Database Error] MongoDB Atlas connection failed: ${err.message}`);
-      if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
-        console.error('[Database Error] Please verify MONGODB_URI in Render Environment Variables and ensure IP 0.0.0.0/0 is allowed in Atlas Network Access.');
-        process.exit(1);
-      }
     }
   }
 
-  // Local development fallback only
-  try {
-    console.log('[Database] Falling back to local embedded In-Memory MongoDB...');
-    const { MongoMemoryServer } = await import('mongodb-memory-server');
-    mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
-    const conn = await mongoose.connect(uri);
-    console.log(`[Database] Connected to embedded In-Memory MongoDB: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`[Database Error] Local In-Memory Mongo fallback failed: ${error.message}`);
-    process.exit(1);
-  }
+  console.log('[Database] Running in standalone API mode with cloud storage endpoints ready.');
 };
 
 export const closeDB = async () => {
   if (mongoose.connection.readyState !== 0) {
     await mongoose.connection.close();
-  }
-  if (mongod) {
-    await mongod.stop();
   }
 };
