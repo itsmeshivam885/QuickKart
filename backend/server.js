@@ -4,6 +4,10 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import mongoose from 'mongoose';
+
+// Disable query buffering so disconnected queries fail fast or return fallback immediately
+mongoose.set('bufferCommands', false);
 
 import { connectDB } from './config/db.js';
 import { seedDatabase } from './utils/seedData.js';
