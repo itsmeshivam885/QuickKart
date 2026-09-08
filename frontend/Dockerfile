@@ -11,6 +11,8 @@ RUN npm ci
 
 # Copy source code and build
 COPY . .
+ARG VITE_API_URL=https://quickkart-ollt.onrender.com
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 # Stage 2: Serve static production assets with Nginx

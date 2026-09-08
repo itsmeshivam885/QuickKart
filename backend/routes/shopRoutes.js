@@ -12,6 +12,7 @@ import { authorize } from '../middlewares/roleMiddleware.js';
 
 const router = express.Router();
 
+router.get('/', getNearbyShops);
 router.get('/nearby', getNearbyShops);
 router.get('/my-shop', protect, authorize('shopkeeper'), getMyShop);
 router.put('/my-shop', protect, authorize('shopkeeper'), updateMyShop);
