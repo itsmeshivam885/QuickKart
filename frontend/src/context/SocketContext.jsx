@@ -13,7 +13,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     // Initialize Socket instance
-    const socketUrl = import.meta.env.VITE_API_URL || window.location.origin;
+    const socketUrl = import.meta.env.VITE_API_URL || 'https://quickkart-ollt.onrender.com';
     const socketInstance = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
