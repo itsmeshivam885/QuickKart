@@ -86,11 +86,18 @@ app.get('/api/debug/env', async (req, res) => {
   let dbTest = { status: 'skipped', reason: 'Supabase client not initialized' };
   if (supabase) {
     try {
-      const { data, error } = await supabase.from('shops').select('id').limit(1);
-      if (error) {
-        dbTest = { status: 'ERROR ❌', error: error.message, code: error.code };
+      const { data: shops, error: shopsErr } = await supabase.from('shops').select('*');
+      const { data: products, error: prodsErr } = await supabase.from('products').select('id, name, shop_id');
+      if (shopsErr) {
+        dbTest = { status: 'SHOPS_ERROR ❌', error: shopsErr.message, code: shopsErr.code };
       } else {
-        dbTest = { status: 'OK ✅', rowsReturned: data?.length ?? 0 };
+        dbTest = {
+          status: 'OK ✅',
+          shopsCount: shops?.length ?? 0,
+          shopsData: shops,
+          productsCount: products?.length ?? 0,
+          productsError: prodsErr ? prodsErr.message : null,
+        };
       }
     } catch (e) {
       dbTest = { status: 'EXCEPTION ❌', error: e.message };
