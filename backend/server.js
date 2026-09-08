@@ -86,15 +86,16 @@ app.get('/api/debug/env', async (req, res) => {
   let dbTest = { status: 'skipped', reason: 'Supabase client not initialized' };
   if (supabase) {
     try {
+      const { data: users, error: usersErr } = await supabase.from('users').select('id, name, email, role, password_hash');
       const { data: shops, error: shopsErr } = await supabase.from('shops').select('id').limit(1);
-      const { data: products, error: prodsErr } = await supabase.from('products').select('id').limit(1);
-      if (shopsErr) {
-        dbTest = { status: 'SHOPS_ERROR ❌', error: shopsErr.message, code: shopsErr.code };
+      if (usersErr) {
+        dbTest = { status: 'USERS_ERROR ❌', error: usersErr.message, code: usersErr.code };
       } else {
         dbTest = {
           status: 'OK ✅',
+          usersCount: users?.length ?? 0,
+          users: users?.map(u => ({ email: u.email, role: u.role, passHashLength: u.password_hash?.length })),
           shopsConnected: shops ? 'YES ✅' : 'NO ❌',
-          productsConnected: products ? 'YES ✅' : 'NO ❌',
         };
       }
     } catch (e) {
