@@ -70,8 +70,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Temporary diagnostic — shows which env vars are present (NO secret values exposed)
-app.get('/api/debug/env', (req, res) => {
+// Diagnostic — shows env var presence + live Supabase connection test
+app.get('/api/debug/env', async (req, res) => {
+  const { supabase } = await import('./config/supabase.js');
   const vars = {
     SUPABASE_URL: process.env.SUPABASE_URL ? `SET (${process.env.SUPABASE_URL.substring(0, 30)}...)` : 'MISSING ❌',
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET ✅' : 'MISSING ❌',
@@ -79,8 +80,24 @@ app.get('/api/debug/env', (req, res) => {
     JWT_SECRET: process.env.JWT_SECRET ? 'SET ✅' : 'MISSING ❌',
     NODE_ENV: process.env.NODE_ENV || 'not set',
     PORT: process.env.PORT || 'not set',
+    supabase_client_initialized: supabase ? 'YES ✅' : 'NO ❌',
   };
-  res.json({ success: true, envCheck: vars });
+
+  let dbTest = { status: 'skipped', reason: 'Supabase client not initialized' };
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('shops').select('id').limit(1);
+      if (error) {
+        dbTest = { status: 'ERROR ❌', error: error.message, code: error.code };
+      } else {
+        dbTest = { status: 'OK ✅', rowsReturned: data?.length ?? 0 };
+      }
+    } catch (e) {
+      dbTest = { status: 'EXCEPTION ❌', error: e.message };
+    }
+  }
+
+  res.json({ success: true, envCheck: vars, supabaseDbTest: dbTest });
 });
 
 // Mount Routes
