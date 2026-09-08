@@ -17,6 +17,8 @@ QuickKart is a hyper‑local product discovery and shop‑customer connectivity 
 
 The application was created as a B.Tech project exhibition in 2026 and demonstrates how local commerce can be digitised without relying on heavy delivery logistics.
 
+**Live demo:** https://quick-kart-lovat.vercel.app
+
 
 ## 🚀 Key Architectural Modules
 
