@@ -131,12 +131,7 @@ export const login = async (req, res, next) => {
         .single();
 
       if (error || !user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid email or password',
-          debugError: error ? error.message : 'User not found in DB',
-          searchedEmail: normalizedEmail,
-        });
+        return res.status(401).json({ success: false, message: 'Invalid email or password' });
       }
 
       if (user.status === 'suspended') {
