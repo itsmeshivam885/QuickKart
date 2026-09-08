@@ -18,6 +18,8 @@ import {
   Navigation,
   Check,
   Sparkles,
+  Menu,
+  X,
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -30,6 +32,7 @@ export const Navbar = () => {
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isDemoMenuOpen, setIsDemoMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const locationRef = useRef(null);
   const userMenuRef = useRef(null);
   const demoRef = useRef(null);
@@ -430,9 +433,189 @@ export const Navbar = () => {
                   Get Started
                 </Link>
               </div>
-            )}
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              aria-label="Toggle Navigation Menu"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden py-4 px-2 border-t border-slate-100 space-y-3 bg-white animate-fade-in">
+            <div className="space-y-1">
+              {role === 'customer' && (
+                <>
+                  <Link
+                    to="/customer/search"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Explore Shops & Products
+                  </Link>
+                  <Link
+                    to="/customer/goal-planner"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-bold text-brand-600 hover:bg-brand-50"
+                  >
+                    ✨ AI Goal Agent
+                  </Link>
+                  <Link
+                    to="/customer/diagnostics"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Diagnostic Search
+                  </Link>
+                  <Link
+                    to="/customer/requests"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    My Requests
+                  </Link>
+                  <Link
+                    to="/customer/reservations"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Product Holds
+                  </Link>
+                  <Link
+                    to="/customer/messages"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Live Chat
+                  </Link>
+                </>
+              )}
+
+              {role === 'shopkeeper' && (
+                <>
+                  <Link
+                    to="/shop/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Shopkeeper Dashboard
+                  </Link>
+                  <Link
+                    to="/shop/products"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Inventory
+                  </Link>
+                  <Link
+                    to="/shop/requests"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Customer Requests
+                  </Link>
+                  <Link
+                    to="/shop/reservations"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Reservations
+                  </Link>
+                  <Link
+                    to="/shop/messages"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Messages
+                  </Link>
+                </>
+              )}
+
+              {role === 'admin' && (
+                <>
+                  <Link
+                    to="/admin/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Admin Hub
+                  </Link>
+                  <Link
+                    to="/admin/shops"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Verify Shops
+                  </Link>
+                  <Link
+                    to="/admin/users"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Users
+                  </Link>
+                  <Link
+                    to="/admin/categories"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Categories
+                  </Link>
+                </>
+              )}
+
+              {!isAuthenticated && (
+                <Link
+                  to="/customer/search"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                >
+                  Explore Nearby
+                </Link>
+              )}
+            </div>
+
+            {/* Mobile Fast Role Switcher */}
+            <div className="pt-3 border-t border-slate-100 space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3">
+                1-Click Fast Role Switcher
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => {
+                    handleDemoSwitch('customer');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="py-2 px-1 text-center rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-800 text-xs font-bold"
+                >
+                  Customer
+                </button>
+                <button
+                  onClick={() => {
+                    handleDemoSwitch('shopkeeper');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="py-2 px-1 text-center rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold"
+                >
+                  Shopkeeper
+                </button>
+                <button
+                  onClick={() => {
+                    handleDemoSwitch('admin');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="py-2 px-1 text-center rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 text-xs font-bold"
+                >
+                  Admin
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
