@@ -433,6 +433,8 @@ export const Navbar = () => {
                   Get Started
                 </Link>
               </div>
+            )}
+
             {/* Mobile Hamburger Toggle Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
