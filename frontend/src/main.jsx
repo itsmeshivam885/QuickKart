@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { LocationProvider } from './context/LocationContext.jsx';
 import { NotificationProvider } from './context/NotificationContext.jsx';
 import { SocketProvider } from './context/SocketContext.jsx';
+import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <LocationProvider>
             <SocketProvider>
-              <App />
+              <ErrorBoundary>
+                <App />
+              </ErrorBoundary>
             </SocketProvider>
           </LocationProvider>
         </AuthProvider>

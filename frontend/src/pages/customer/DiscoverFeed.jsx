@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useLocation } from '../../context/LocationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -21,6 +21,7 @@ import {
   Sparkles,
   RefreshCw,
   Send,
+  Zap,
 } from 'lucide-react';
 
 export const DiscoverFeed = () => {
@@ -38,10 +39,12 @@ export const DiscoverFeed = () => {
   const [shops, setShops] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Modals
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
   const [reserveTarget, setReserveTarget] = useState(null);
+  const isFirstLoad = useRef(true);
 
   const categories = [
     'All',
@@ -53,9 +56,10 @@ export const DiscoverFeed = () => {
     'Electronics & Mobiles',
   ];
 
-  // Fetch shops and products
-  const fetchData = async () => {
-    setLoading(true);
+  // Fetch shops and products (stale-while-revalidate: keep old data visible on refetch)
+  const fetchData = async (isInitial = false) => {
+    if (isInitial) setLoading(true);
+    else setRefreshing(true);
     try {
       const [shopRes, prodRes] = await Promise.all([
         shopService.getNearbyShops({
@@ -81,11 +85,14 @@ export const DiscoverFeed = () => {
       console.error('Error loading discover feed:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    const initial = isFirstLoad.current;
+    isFirstLoad.current = false;
+    fetchData(initial);
   }, [coordinates, radiusKm, selectedCategory, sortBy]);
 
   const handleSearchSubmit = (e) => {
@@ -228,6 +235,12 @@ export const DiscoverFeed = () => {
 
           {/* Right Toolbar: View Toggle & Sort */}
           <div className="flex items-center gap-3">
+            {refreshing && (
+              <span className="flex items-center gap-1.5 text-brand-600 font-semibold">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                Updating...
+              </span>
+            )}
             {/* Sort */}
             <div className="flex items-center gap-1.5 text-slate-600">
               <span className="font-medium">Sort:</span>
@@ -304,7 +317,7 @@ export const DiscoverFeed = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity ${refreshing ? 'opacity-60' : ''}`}>
                 {shops.map((shop) => (
                   <ShopCard
                     key={shop._id}
@@ -329,7 +342,7 @@ export const DiscoverFeed = () => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 transition-opacity ${refreshing ? 'opacity-60' : ''}`}>
               {products.map((product) => (
                 <ProductCard
                   key={product._id}

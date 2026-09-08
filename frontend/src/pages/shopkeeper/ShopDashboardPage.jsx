@@ -31,13 +31,15 @@ export const ShopDashboardPage = () => {
   const [requests, setRequests] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Modals
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
+  const fetchDashboardData = async (isInitial = false) => {
+    if (isInitial) setLoading(true);
+    else setRefreshing(true);
     try {
       const [shopRes, reqRes, resRes] = await Promise.all([
         shopService.getMyShop(),
@@ -55,11 +57,12 @@ export const ShopDashboardPage = () => {
       console.error('Error loading shop dashboard:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData(true);
   }, []);
 
   const pendingRequestsCount = requests.filter((r) => !r.myResponse).length;
@@ -108,11 +111,11 @@ export const ShopDashboardPage = () => {
             Add Product
           </button>
           <button
-            onClick={fetchDashboardData}
+            onClick={() => fetchDashboardData(false)}
             className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold"
             title="Refresh dashboard"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
