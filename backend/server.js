@@ -4,13 +4,8 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
-import mongoose from 'mongoose';
 
-// Disable query buffering so disconnected queries fail fast or return fallback immediately
-mongoose.set('bufferCommands', false);
-
-import { connectDB } from './config/db.js';
-import { seedDatabase } from './utils/seedData.js';
+import { checkSupabaseConnection } from './config/supabase.js';
 import { startReservationExpiryWorker } from './utils/reservationExpiry.js';
 import { initializeSocket } from './sockets/socketHandler.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
@@ -69,7 +64,7 @@ app.get('/', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
-    message: 'QuickKart Hyperlocal API Server is running',
+    message: 'QuickKart Hyperlocal API Server is running (Supabase PostgreSQL Target)',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
   });
@@ -94,8 +89,7 @@ const PORT = process.env.PORT || 5000;
 // Start Server
 const startServer = async () => {
   try {
-    await connectDB();
-    await seedDatabase();
+    await checkSupabaseConnection();
     startReservationExpiryWorker(io);
 
     server.on('error', (err) => {

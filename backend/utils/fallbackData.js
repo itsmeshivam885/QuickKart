@@ -1,6 +1,7 @@
 export const FALLBACK_SHOPS = [
   {
-    _id: '64a000000000000000000001',
+    _id: 'b0000000-0000-0000-0000-000000000001',
+    id: 'b0000000-0000-0000-0000-000000000001',
     shopName: 'Sharma Hardware & Sanitation Store',
     tagline: 'Authorized Finolex, Astral & Jaquar Dealer',
     description: 'Trusted neighborhood hardware and sanitation supplier serving Karol Bagh for 22+ years. Genuine pipes, valves, tools, and construction supplies.',
@@ -33,7 +34,8 @@ export const FALLBACK_SHOPS = [
     ]
   },
   {
-    _id: '64a000000000000000000002',
+    _id: 'b0000000-0000-0000-0000-000000000002',
+    id: 'b0000000-0000-0000-0000-000000000002',
     shopName: 'Gupta Building Materials & Hardware',
     tagline: 'Complete Cement, Pipes & Sanitary Solutions',
     description: 'Wholesale and retail supplier of top plumbing, CPVC fittings, and building materials.',
@@ -65,7 +67,8 @@ export const FALLBACK_SHOPS = [
     ]
   },
   {
-    _id: '64a000000000000000000003',
+    _id: 'b0000000-0000-0000-0000-000000000003',
+    id: 'b0000000-0000-0000-0000-000000000003',
     shopName: 'City Plumbing Supplies & Fittings',
     tagline: 'Direct CPVC, UPVC, Valves & Drain Systems',
     description: 'Specialized plumbing merchant stocking Astral, Supreme, and Prince pipes with instant counter collection.',
@@ -99,7 +102,8 @@ export const FALLBACK_SHOPS = [
 
 export const FALLBACK_PRODUCTS = [
   {
-    _id: '64b000000000000000000001',
+    _id: 'c0000000-0000-0000-0000-000000000001',
+    id: 'c0000000-0000-0000-0000-000000000001',
     name: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
     brand: 'Finolex',
     description: 'High pressure heavy-duty PVC pipe for residential plumbing lines and drainage.',
@@ -113,7 +117,8 @@ export const FALLBACK_PRODUCTS = [
     images: ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'],
     tags: ['pipe', 'pvc', 'plumbing', 'finolex'],
     shopId: {
-      _id: '64a000000000000000000001',
+      _id: 'b0000000-0000-0000-0000-000000000001',
+      id: 'b0000000-0000-0000-0000-000000000001',
       shopName: 'Sharma Hardware & Sanitation Store',
       rating: 4.9,
       address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
@@ -121,7 +126,8 @@ export const FALLBACK_PRODUCTS = [
     }
   },
   {
-    _id: '64b000000000000000000002',
+    _id: 'c0000000-0000-0000-0000-000000000002',
+    id: 'c0000000-0000-0000-0000-000000000002',
     name: 'Astral CPVC Pro Pipe 1 inch (3 Meter)',
     brand: 'Astral',
     description: 'Lead-free hot and cold potable water plumbing pipe certified to ASTM standards.',
@@ -135,7 +141,8 @@ export const FALLBACK_PRODUCTS = [
     images: ['https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=600&q=80'],
     tags: ['pipe', 'cpvc', 'astral', 'hot water'],
     shopId: {
-      _id: '64a000000000000000000001',
+      _id: 'b0000000-0000-0000-0000-000000000001',
+      id: 'b0000000-0000-0000-0000-000000000001',
       shopName: 'Sharma Hardware & Sanitation Store',
       rating: 4.9,
       address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
@@ -143,7 +150,8 @@ export const FALLBACK_PRODUCTS = [
     }
   },
   {
-    _id: '64b000000000000000000003',
+    _id: 'c0000000-0000-0000-0000-000000000003',
+    id: 'c0000000-0000-0000-0000-000000000003',
     name: 'Bosch Professional 500W Impact Drill Kit',
     brand: 'Bosch',
     description: 'Heavy duty multi-speed reversible impact drill machine with 10 drill bits and case.',
@@ -157,7 +165,8 @@ export const FALLBACK_PRODUCTS = [
     images: ['https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=600&q=80'],
     tags: ['drill', 'bosch', 'tools', 'hardware'],
     shopId: {
-      _id: '64a000000000000000000001',
+      _id: 'b0000000-0000-0000-0000-000000000001',
+      id: 'b0000000-0000-0000-0000-000000000001',
       shopName: 'Sharma Hardware & Sanitation Store',
       rating: 4.9,
       address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
@@ -165,7 +174,8 @@ export const FALLBACK_PRODUCTS = [
     }
   },
   {
-    _id: '64b000000000000000000004',
+    _id: 'c0000000-0000-0000-0000-000000000004',
+    id: 'c0000000-0000-0000-0000-000000000004',
     name: 'Jaquar Brass Angle Valve with Flange',
     brand: 'Jaquar',
     description: 'Quarter turn high-durability chrome plated brass angle stop cock valve.',
@@ -179,7 +189,8 @@ export const FALLBACK_PRODUCTS = [
     images: ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80'],
     tags: ['valve', 'jaquar', 'bathroom'],
     shopId: {
-      _id: '64a000000000000000000002',
+      _id: 'b0000000-0000-0000-0000-000000000002',
+      id: 'b0000000-0000-0000-0000-000000000002',
       shopName: 'Gupta Building Materials & Hardware',
       rating: 4.7,
       address: { street: 'Plot 22, Connaught Circus', area: 'Connaught Place', city: 'New Delhi' },

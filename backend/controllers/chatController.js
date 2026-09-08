@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase.js';
 // @desc    Get user conversations
 // @route   GET /api/chat/conversations
 // @access  Private
-export const getUserConversations = async (req, res, next) => {
+export const getConversations = async (req, res, next) => {
   try {
     res.json({
       success: true,
@@ -53,7 +53,7 @@ export const getOrCreateConversation = async (req, res, next) => {
 // @desc    Get messages
 // @route   GET /api/chat/conversations/:id/messages
 // @access  Private
-export const getConversationMessages = async (req, res, next) => {
+export const getMessages = async (req, res, next) => {
   try {
     res.json({
       success: true,
@@ -77,9 +77,10 @@ export const getConversationMessages = async (req, res, next) => {
 export const sendMessage = async (req, res, next) => {
   try {
     const { text } = req.body;
+    const senderName = req.user?.name || 'Customer';
     const msg = {
       _id: 'msg_' + Date.now(),
-      sender: { name: 'Rahul Sharma' },
+      sender: { name: senderName },
       text,
       createdAt: new Date().toISOString(),
     };
@@ -87,7 +88,7 @@ export const sendMessage = async (req, res, next) => {
     const io = req.app.get('io');
     if (io) {
       io.emit('chat_notification', {
-        senderName: 'Rahul Sharma',
+        senderName,
         text,
       });
     }
@@ -100,3 +101,45 @@ export const sendMessage = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get in-app notifications
+// @route   GET /api/chat/notifications
+// @access  Private
+export const getNotifications = async (req, res, next) => {
+  try {
+    res.json({
+      success: true,
+      notifications: [
+        {
+          _id: 'notif_1',
+          id: 'notif_1',
+          title: 'Welcome to QuickKart',
+          message: 'Discover verified hardware & plumbing supplies in minutes.',
+          type: 'general',
+          read: false,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Mark all notifications as read
+// @route   PUT /api/chat/notifications/read-all
+// @access  Private
+export const markNotificationsRead = async (req, res, next) => {
+  try {
+    res.json({
+      success: true,
+      message: 'All notifications marked as read',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Aliases for backwards compatibility
+export const getUserConversations = getConversations;
+export const getConversationMessages = getMessages;

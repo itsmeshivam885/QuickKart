@@ -2,23 +2,31 @@ export const errorHandler = (err, req, res, next) => {
   let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   let message = err.message || 'Internal Server Error';
 
-  // Handle Mongoose Bad ObjectId (CastError)
-  if (err.name === 'CastError' && err.kind === 'ObjectId') {
-    statusCode = 404;
-    message = 'Resource not found (Invalid ID)';
+  // Handle Supabase / PostgreSQL unique constraint violation (code 23505)
+  if (err.code === '23505') {
+    statusCode = 400;
+    message = err.details || 'Duplicate entry already exists.';
   }
 
-  // Handle Mongoose duplicate key error
-  if (err.code === 11000) {
+  // Handle Supabase / PostgreSQL foreign key violation (code 23503)
+  if (err.code === '23503') {
     statusCode = 400;
-    const field = Object.keys(err.keyValue)[0];
-    message = `Duplicate value entered for ${field} field`;
+    message = err.details || 'Referenced parent record does not exist.';
   }
 
-  // Handle Mongoose validation errors
-  if (err.name === 'ValidationError') {
+  // Handle Supabase / PostgreSQL check constraint violation (code 23514)
+  if (err.code === '23514') {
     statusCode = 400;
-    message = Object.values(err.errors).map((val) => val.message).join(', ');
+    message = err.details || 'Value failed table check constraint validation.';
+  }
+
+  // Handle JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    statusCode = 401;
+    message = 'Not authorized, invalid token';
+  } else if (err.name === 'TokenExpiredError') {
+    statusCode = 401;
+    message = 'Not authorized, token expired';
   }
 
   console.error(`[Error Handler] ${req.method} ${req.originalUrl} - ${statusCode}: ${message}`);

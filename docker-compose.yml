@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # QuickKart Backend Service (Node.js + Express + Socket.IO)
+  # QuickKart Backend Service (Node.js + Express + Socket.IO + Supabase PostgreSQL)
   backend:
     build:
       context: ./backend
@@ -9,11 +9,13 @@ services:
     container_name: quickkart-backend
     restart: always
     environment:
-      - PORT=5000
+      - PORT=${PORT:-5000}
       - NODE_ENV=production
-      - JWT_SECRET=quickkart_jwt_secret_key_2026_super_secure
-      - MONGODB_URI=mongodb+srv://itsmeshivam885_db_user:yJXUBuZmvwql8k7h@quickkart1.v7je6oo.mongodb.net/quickkart?retryWrites=true&w=majority&appName=QuickKart1
-      - CLIENT_URL=http://localhost:80
+      - JWT_SECRET=${JWT_SECRET:-quickkart_jwt_secret_key_2026_super_secure}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - CLIENT_URL=${CLIENT_URL:-http://localhost:80}
     ports:
       - "5000:5000"
     networks:

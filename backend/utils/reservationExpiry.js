@@ -1,62 +1,56 @@
-import Reservation from '../models/Reservation.js';
-import Request from '../models/Request.js';
-import Notification from '../models/Notification.js';
+import { supabase } from '../config/supabase.js';
 
 export const startReservationExpiryWorker = (io) => {
   // Check every 30 seconds
   setInterval(async () => {
+    if (!supabase) return;
+
     try {
-      const now = new Date();
+      const now = new Date().toISOString();
 
       // 1. Auto-expire reservations whose hold duration has elapsed
-      const expiredReservations = await Reservation.find({
-        status: { $in: ['PENDING', 'CONFIRMED'] },
-        expiresAt: { $lt: now },
-      });
+      const { data: expiredReservations, error } = await supabase
+        .from('reservations')
+        .select('id, reservation_code, product_name, customer_id, shop_id')
+        .in('status', ['PENDING', 'CONFIRMED'])
+        .lt('expires_at', now);
 
-      for (const res of expiredReservations) {
-        res.status = 'EXPIRED';
-        res.timeline.push({
-          status: 'EXPIRED',
-          timestamp: now,
-          note: 'Reservation hold window expired automatically',
-        });
-        await res.save();
-
-        // Notify customer
-        await Notification.create({
-          userId: res.customerId,
-          title: 'Reservation Expired',
-          message: `Your reservation for "${res.productName}" (Code: ${res.reservationCode}) has expired.`,
-          type: 'reservation_status',
-          link: '/customer/reservations',
-        });
-
-        // Notify via socket
-        if (io) {
-          io.to(`user_${res.customerId}`).emit('reservation_updated', {
-            reservationId: res._id,
-            status: 'EXPIRED',
-          });
-          io.to(`shop_${res.shopId}`).emit('reservation_updated', {
-            reservationId: res._id,
-            status: 'EXPIRED',
-          });
-        }
+      if (error) {
+        console.error('[Worker] Error fetching expired reservations:', error.message);
+        return;
       }
 
-      // 2. Auto-expire old requests
-      await Request.updateMany(
-        {
-          status: 'active',
-          expiresAt: { $lt: now },
-        },
-        {
-          $set: { status: 'expired' },
+      if (expiredReservations && expiredReservations.length > 0) {
+        for (const res of expiredReservations) {
+          await supabase
+            .from('reservations')
+            .update({ status: 'EXPIRED', updated_at: now })
+            .eq('id', res.id);
+
+          console.log(`[Worker] Expired reservation: ${res.reservation_code} (${res.product_name})`);
+
+          // Notify via socket if io is active
+          if (io) {
+            io.to(`user_${res.customer_id}`).emit('reservation_updated', {
+              reservationId: res.id,
+              reservationCode: res.reservation_code,
+              status: 'EXPIRED',
+            });
+            io.to(`shop_${res.shop_id}`).emit('reservation_updated', {
+              reservationId: res.id,
+              reservationCode: res.reservation_code,
+              status: 'EXPIRED',
+            });
+            io.emit('reservation_updated', {
+              reservationId: res.id,
+              reservationCode: res.reservation_code,
+              status: 'EXPIRED',
+            });
+          }
         }
-      );
+      }
     } catch (err) {
-      console.error('[Worker] Expiry check error:', err.message);
+      console.error('[Worker] Expiry worker exception:', err.message);
     }
   }, 30000);
 };
