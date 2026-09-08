@@ -70,6 +70,19 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Temporary diagnostic — shows which env vars are present (NO secret values exposed)
+app.get('/api/debug/env', (req, res) => {
+  const vars = {
+    SUPABASE_URL: process.env.SUPABASE_URL ? `SET (${process.env.SUPABASE_URL.substring(0, 30)}...)` : 'MISSING ❌',
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET ✅' : 'MISSING ❌',
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET ✅' : 'MISSING ❌',
+    JWT_SECRET: process.env.JWT_SECRET ? 'SET ✅' : 'MISSING ❌',
+    NODE_ENV: process.env.NODE_ENV || 'not set',
+    PORT: process.env.PORT || 'not set',
+  };
+  res.json({ success: true, envCheck: vars });
+});
+
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/shops', shopRoutes);
