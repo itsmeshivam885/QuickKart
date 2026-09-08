@@ -11,6 +11,13 @@
 
 ---
 
+## 📖 About
+
+QuickKart is a hyper‑local product discovery and shop‑customer connectivity platform. It enables users to locate nearby stores, compare prices in real time, and reserve items for quick pickup. Built with a modern React/Vite frontend and a Node.js/Express backend, the project showcases geospatial queries, real‑time Socket.io communication, and role‑based UI for customers, shopkeepers, and admins.
+
+The application was created as a B.Tech project exhibition in 2026 and demonstrates how local commerce can be digitised without relying on heavy delivery logistics.
+
+
 ## 🚀 Key Architectural Modules
 
 1. **Hyperlocal Geospatial Engine (`2dsphere` / GeoJSON)**:
