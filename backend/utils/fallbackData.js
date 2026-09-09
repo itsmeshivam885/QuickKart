@@ -1,10 +1,11 @@
-export const FALLBACK_SHOPS = [
+export let FALLBACK_SHOPS = [
   {
     _id: 'b0000000-0000-0000-0000-000000000001',
     id: 'b0000000-0000-0000-0000-000000000001',
-    shopName: 'Sharma Hardware & Sanitation Store',
-    tagline: 'Authorized Finolex, Astral & Jaquar Dealer',
-    description: 'Trusted neighborhood hardware and sanitation supplier serving Karol Bagh for 22+ years. Genuine pipes, valves, tools, and construction supplies.',
+    owner_id: 'a0000000-0000-0000-0000-000000000002',
+    shopName: 'Sharma Hardware & Daily Essentials Store',
+    tagline: 'Authorized Dealer • Genuine Goods & Construction Supplies',
+    description: 'Trusted neighborhood hardware and daily essentials supplier serving Karol Bagh for 22+ years. Genuine pipes, tools, groceries and rapid counter collection.',
     category: 'Hardware & Tools',
     address: {
       street: 'Shop 14, Block 8, Ajmal Khan Road',
@@ -27,15 +28,11 @@ export const FALLBACK_SHOPS = [
     promptResponseRate: 98,
     distanceKm: 0.8,
     openingHours: { open: '08:30 AM', close: '09:00 PM', isOpenNow: true },
-    topProducts: [
-      { name: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)', price: 290, mrp: 350, unit: 'piece', stockStatus: 'in_stock', images: ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'] },
-      { name: 'Astral CPVC Pro Pipe 1 inch (3 Meter)', price: 390, mrp: 460, unit: 'piece', stockStatus: 'in_stock', images: ['https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=600&q=80'] },
-      { name: 'Bosch Professional 500W Impact Drill Kit', price: 2850, mrp: 3499, unit: 'kit', stockStatus: 'in_stock', images: ['https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=600&q=80'] }
-    ]
   },
   {
     _id: 'b0000000-0000-0000-0000-000000000002',
     id: 'b0000000-0000-0000-0000-000000000002',
+    owner_id: 'a0000000-0000-0000-0000-000000000003',
     shopName: 'Gupta Building Materials & Hardware',
     tagline: 'Complete Cement, Pipes & Sanitary Solutions',
     description: 'Wholesale and retail supplier of top plumbing, CPVC fittings, and building materials.',
@@ -61,17 +58,14 @@ export const FALLBACK_SHOPS = [
     promptResponseRate: 92,
     distanceKm: 2.3,
     openingHours: { open: '09:00 AM', close: '08:30 PM', isOpenNow: true },
-    topProducts: [
-      { name: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)', price: 295, mrp: 350, unit: 'piece', stockStatus: 'in_stock', images: ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'] },
-      { name: 'Jaquar Brass Angle Valve with Flange', price: 480, mrp: 575, unit: 'piece', stockStatus: 'in_stock', images: ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80'] }
-    ]
   },
   {
     _id: 'b0000000-0000-0000-0000-000000000003',
     id: 'b0000000-0000-0000-0000-000000000003',
-    shopName: 'City Plumbing Supplies & Fittings',
-    tagline: 'Direct CPVC, UPVC, Valves & Drain Systems',
-    description: 'Specialized plumbing merchant stocking Astral, Supreme, and Prince pipes with instant counter collection.',
+    owner_id: 'a0000000-0000-0000-0000-000000000005',
+    shopName: 'City Plumbing & Daily Goods',
+    tagline: 'Direct CPVC, UPVC, Valves & Essentials',
+    description: 'Specialized merchant stocking Astral, Supreme, and essential provisions with instant counter collection.',
     category: 'Plumbing & Sanitary',
     address: {
       street: 'Shop 5, Central Market, Lajpat Nagar II',
@@ -92,15 +86,42 @@ export const FALLBACK_SHOPS = [
     liveServingCount: 1,
     estWaitTimeMinutes: 3,
     promptResponseRate: 96,
-    distanceKm: 3.1,
+    distanceKm: 9.8,
     openingHours: { open: '09:30 AM', close: '09:00 PM', isOpenNow: true },
-    topProducts: [
-      { name: 'Supreme 1-inch Schedule 40 PVC Pipe (10ft)', price: 310, mrp: 375, unit: 'piece', stockStatus: 'in_stock', images: ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'] }
-    ]
+  },
+  {
+    _id: 'b0000000-0000-0000-0000-000000000004',
+    id: 'b0000000-0000-0000-0000-000000000004',
+    owner_id: 'a0000000-0000-0000-0000-000000000006',
+    shopName: 'Noida Metro Mart & Hardware',
+    tagline: 'Comprehensive Industrial & Daily Hub',
+    description: 'Sector 62 superstore providing electrical fittings, plumbing, and bulk provisions.',
+    category: 'Hardware & Tools',
+    address: {
+      street: 'Tower B, Sector 62',
+      area: 'Noida',
+      city: 'Noida',
+      pincode: '201309',
+    },
+    location: {
+      type: 'Point',
+      coordinates: [77.3639, 28.6256],
+    },
+    contactPhone: '+91 9876543213',
+    bannerImage: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=800&q=80',
+    rating: 4.8,
+    numReviews: 110,
+    isActive: true,
+    verificationStatus: 'verified',
+    liveServingCount: 3,
+    estWaitTimeMinutes: 6,
+    promptResponseRate: 94,
+    distanceKm: 18.5,
+    openingHours: { open: '08:00 AM', close: '10:00 PM', isOpenNow: true },
   }
 ];
 
-export const FALLBACK_PRODUCTS = [
+export let FALLBACK_PRODUCTS = [
   {
     _id: 'c0000000-0000-0000-0000-000000000001',
     id: 'c0000000-0000-0000-0000-000000000001',
@@ -112,6 +133,7 @@ export const FALLBACK_PRODUCTS = [
     mrp: 350,
     unit: 'piece',
     quantityInStock: 45,
+    lowStockThreshold: 10,
     isAvailable: true,
     stockStatus: 'in_stock',
     images: ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'],
@@ -119,7 +141,7 @@ export const FALLBACK_PRODUCTS = [
     shopId: {
       _id: 'b0000000-0000-0000-0000-000000000001',
       id: 'b0000000-0000-0000-0000-000000000001',
-      shopName: 'Sharma Hardware & Sanitation Store',
+      shopName: 'Sharma Hardware & Daily Essentials Store',
       rating: 4.9,
       address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
       location: { coordinates: [77.1906, 28.6517] }
@@ -135,15 +157,16 @@ export const FALLBACK_PRODUCTS = [
     price: 390,
     mrp: 460,
     unit: 'piece',
-    quantityInStock: 30,
+    quantityInStock: 3, // Low stock on purpose for testing warnings!
+    lowStockThreshold: 5,
     isAvailable: true,
-    stockStatus: 'in_stock',
+    stockStatus: 'low_stock',
     images: ['https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=600&q=80'],
     tags: ['pipe', 'cpvc', 'astral', 'hot water'],
     shopId: {
       _id: 'b0000000-0000-0000-0000-000000000001',
       id: 'b0000000-0000-0000-0000-000000000001',
-      shopName: 'Sharma Hardware & Sanitation Store',
+      shopName: 'Sharma Hardware & Daily Essentials Store',
       rating: 4.9,
       address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
       location: { coordinates: [77.1906, 28.6517] }
@@ -160,6 +183,7 @@ export const FALLBACK_PRODUCTS = [
     mrp: 3499,
     unit: 'kit',
     quantityInStock: 8,
+    lowStockThreshold: 2,
     isAvailable: true,
     stockStatus: 'in_stock',
     images: ['https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=600&q=80'],
@@ -167,7 +191,7 @@ export const FALLBACK_PRODUCTS = [
     shopId: {
       _id: 'b0000000-0000-0000-0000-000000000001',
       id: 'b0000000-0000-0000-0000-000000000001',
-      shopName: 'Sharma Hardware & Sanitation Store',
+      shopName: 'Sharma Hardware & Daily Essentials Store',
       rating: 4.9,
       address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
       location: { coordinates: [77.1906, 28.6517] }
@@ -176,6 +200,106 @@ export const FALLBACK_PRODUCTS = [
   {
     _id: 'c0000000-0000-0000-0000-000000000004',
     id: 'c0000000-0000-0000-0000-000000000004',
+    name: 'Amul Taaza Milk 1L',
+    brand: 'Amul',
+    description: 'Pasteurised toned milk with 3.0% fat, fresh and wholesome for daily family nutrition.',
+    category: 'Groceries & Daily Essentials',
+    price: 65,
+    mrp: 66,
+    unit: 'pouch',
+    quantityInStock: 8,
+    lowStockThreshold: 4,
+    isAvailable: true,
+    stockStatus: 'in_stock',
+    images: ['https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80'],
+    tags: ['milk', 'amul', 'dairy', 'daily'],
+    shopId: {
+      _id: 'b0000000-0000-0000-0000-000000000001',
+      id: 'b0000000-0000-0000-0000-000000000001',
+      shopName: 'Sharma Hardware & Daily Essentials Store',
+      rating: 4.9,
+      address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
+      location: { coordinates: [77.1906, 28.6517] }
+    }
+  },
+  {
+    _id: 'c0000000-0000-0000-0000-000000000005',
+    id: 'c0000000-0000-0000-0000-000000000005',
+    name: 'Aashirvaad Shudh Chakki Atta (5kg)',
+    brand: 'Aashirvaad',
+    description: '100% pure whole wheat grain flour with 0% maida for soft and fluffy rotis.',
+    category: 'Groceries & Daily Essentials',
+    price: 245,
+    mrp: 275,
+    unit: 'bag',
+    quantityInStock: 14,
+    lowStockThreshold: 5,
+    isAvailable: true,
+    stockStatus: 'in_stock',
+    images: ['https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80'],
+    tags: ['atta', 'flour', 'wheat', 'groceries'],
+    shopId: {
+      _id: 'b0000000-0000-0000-0000-000000000001',
+      id: 'b0000000-0000-0000-0000-000000000001',
+      shopName: 'Sharma Hardware & Daily Essentials Store',
+      rating: 4.9,
+      address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
+      location: { coordinates: [77.1906, 28.6517] }
+    }
+  },
+  {
+    _id: 'c0000000-0000-0000-0000-000000000006',
+    id: 'c0000000-0000-0000-0000-000000000006',
+    name: 'Tata Salt Vacuum Evaporated (1kg)',
+    brand: 'Tata',
+    description: 'Iodised vacuum-evaporated table salt ensuring iodine guarantee for healthy development.',
+    category: 'Groceries & Daily Essentials',
+    price: 28,
+    mrp: 30,
+    unit: 'packet',
+    quantityInStock: 2, // Low stock warning!
+    lowStockThreshold: 10,
+    isAvailable: true,
+    stockStatus: 'low_stock',
+    images: ['https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?auto=format&fit=crop&w=600&q=80'],
+    tags: ['salt', 'tata', 'iodised', 'groceries'],
+    shopId: {
+      _id: 'b0000000-0000-0000-0000-000000000001',
+      id: 'b0000000-0000-0000-0000-000000000001',
+      shopName: 'Sharma Hardware & Daily Essentials Store',
+      rating: 4.9,
+      address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
+      location: { coordinates: [77.1906, 28.6517] }
+    }
+  },
+  {
+    _id: 'c0000000-0000-0000-0000-000000000007',
+    id: 'c0000000-0000-0000-0000-000000000007',
+    name: 'Parle-G Gold Biscuits (1kg)',
+    brand: 'Parle',
+    description: 'Bigger, crispier and tastier glucose biscuits filled with goodness of milk and wheat.',
+    category: 'Groceries & Daily Essentials',
+    price: 130,
+    mrp: 145,
+    unit: 'pack',
+    quantityInStock: 0, // Critically low / Out of stock on purpose!
+    lowStockThreshold: 5,
+    isAvailable: false,
+    stockStatus: 'out_of_stock',
+    images: ['https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=80'],
+    tags: ['biscuits', 'parle-g', 'snacks'],
+    shopId: {
+      _id: 'b0000000-0000-0000-0000-000000000001',
+      id: 'b0000000-0000-0000-0000-000000000001',
+      shopName: 'Sharma Hardware & Daily Essentials Store',
+      rating: 4.9,
+      address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
+      location: { coordinates: [77.1906, 28.6517] }
+    }
+  },
+  {
+    _id: 'c0000000-0000-0000-0000-000000000008',
+    id: 'c0000000-0000-0000-0000-000000000008',
     name: 'Jaquar Brass Angle Valve with Flange',
     brand: 'Jaquar',
     description: 'Quarter turn high-durability chrome plated brass angle stop cock valve.',
@@ -184,17 +308,531 @@ export const FALLBACK_PRODUCTS = [
     mrp: 575,
     unit: 'piece',
     quantityInStock: 25,
+    lowStockThreshold: 4,
     isAvailable: true,
     stockStatus: 'in_stock',
     images: ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80'],
     tags: ['valve', 'jaquar', 'bathroom'],
     shopId: {
-      _id: 'b0000000-0000-0000-0000-000000000002',
-      id: 'b0000000-0000-0000-0000-000000000002',
-      shopName: 'Gupta Building Materials & Hardware',
-      rating: 4.7,
-      address: { street: 'Plot 22, Connaught Circus', area: 'Connaught Place', city: 'New Delhi' },
-      location: { coordinates: [77.2177, 28.6304] }
+      _id: 'b0000000-0000-0000-0000-000000000001',
+      id: 'b0000000-0000-0000-0000-000000000001',
+      shopName: 'Sharma Hardware & Daily Essentials Store',
+      rating: 4.9,
+      address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi' },
+      location: { coordinates: [77.1906, 28.6517] }
     }
+  }
+];
+
+// Helper to generate dates relative to current time
+const daysAgo = (days, hours = 0) => new Date(Date.now() - (days * 24 * 60 * 60 * 1000) - (hours * 60 * 60 * 1000)).toISOString();
+
+// Realistic historical reservations/orders across Delhi NCR stores
+export let FALLBACK_RESERVATIONS = [
+  // TODAY'S ORDERS
+  {
+    _id: 'res_today_01',
+    id: 'res_today_01',
+    reservationCode: 'QK-7412',
+    customer_id: 'a0000000-0000-0000-0000-000000000001',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma (Karol Bagh)
+    product_name: 'Amul Taaza Milk 1L',
+    quantity: 4,
+    unit: 'pouch',
+    agreed_price: 65,
+    total_amount: 260,
+    status: 'COMPLETED',
+    customer: { name: 'Pooja Verma', phone: '+91 9811002233' },
+    created_at: daysAgo(0, 2),
+  },
+  {
+    _id: 'res_today_02',
+    id: 'res_today_02',
+    reservationCode: 'QK-9831',
+    customer_id: 'a0000000-0000-0000-0000-000000000001',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
+    quantity: 3,
+    unit: 'piece',
+    agreed_price: 290,
+    total_amount: 870,
+    status: 'READY',
+    customer: { name: 'Vikas Malhotra', phone: '+91 9877112233' },
+    created_at: daysAgo(0, 4),
+  },
+  {
+    _id: 'res_today_03',
+    id: 'res_today_03',
+    reservationCode: 'QK-5521',
+    customer_id: 'a0000000-0000-0000-0000-000000000001',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Aashirvaad Shudh Chakki Atta (5kg)',
+    quantity: 2,
+    unit: 'bag',
+    agreed_price: 245,
+    total_amount: 490,
+    status: 'CONFIRMED',
+    customer: { name: 'Anita Saxena', phone: '+91 9899334455' },
+    created_at: daysAgo(0, 5),
+  },
+  {
+    _id: 'res_today_04',
+    id: 'res_today_04',
+    reservationCode: 'QK-3190',
+    customer_id: 'a0000000-0000-0000-0000-000000000001',
+    shop_id: 'b0000000-0000-0000-0000-000000000002', // Gupta (Connaught Place ~2.3km)
+    product_name: 'Amul Taaza Milk 1L',
+    quantity: 12,
+    unit: 'pouch',
+    agreed_price: 65,
+    total_amount: 780,
+    status: 'COMPLETED',
+    created_at: daysAgo(0, 3),
+  },
+  {
+    _id: 'res_today_05',
+    id: 'res_today_05',
+    reservationCode: 'QK-6612',
+    customer_id: 'a0000000-0000-0000-0000-000000000001',
+    shop_id: 'b0000000-0000-0000-0000-000000000002', // Gupta
+    product_name: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
+    quantity: 8,
+    unit: 'piece',
+    agreed_price: 295,
+    total_amount: 2360,
+    status: 'COMPLETED',
+    created_at: daysAgo(0, 6),
+  },
+
+  // LAST 7 DAYS
+  {
+    _id: 'res_7d_01',
+    id: 'res_7d_01',
+    reservationCode: 'QK-8821',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Amul Taaza Milk 1L',
+    quantity: 48,
+    unit: 'pouch',
+    agreed_price: 65,
+    total_amount: 3120,
+    status: 'COMPLETED',
+    created_at: daysAgo(2),
+  },
+  {
+    _id: 'res_7d_02',
+    id: 'res_7d_02',
+    reservationCode: 'QK-1198',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Aashirvaad Shudh Chakki Atta (5kg)',
+    quantity: 35,
+    unit: 'bag',
+    agreed_price: 245,
+    total_amount: 8575,
+    status: 'COMPLETED',
+    created_at: daysAgo(3),
+  },
+  {
+    _id: 'res_7d_03',
+    id: 'res_7d_03',
+    reservationCode: 'QK-4402',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Tata Salt Vacuum Evaporated (1kg)',
+    quantity: 28,
+    unit: 'packet',
+    agreed_price: 28,
+    total_amount: 784,
+    status: 'COMPLETED',
+    created_at: daysAgo(4),
+  },
+  {
+    _id: 'res_7d_04',
+    id: 'res_7d_04',
+    reservationCode: 'QK-3319',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
+    quantity: 32,
+    unit: 'piece',
+    agreed_price: 290,
+    total_amount: 9280,
+    status: 'COMPLETED',
+    created_at: daysAgo(5),
+  },
+  {
+    _id: 'res_7d_05',
+    id: 'res_7d_05',
+    reservationCode: 'QK-2984',
+    shop_id: 'b0000000-0000-0000-0000-000000000002', // Gupta (~2.3km)
+    product_name: 'Amul Taaza Milk 1L',
+    quantity: 94,
+    unit: 'pouch',
+    agreed_price: 65,
+    total_amount: 6110,
+    status: 'COMPLETED',
+    created_at: daysAgo(4),
+  },
+  {
+    _id: 'res_7d_06',
+    id: 'res_7d_06',
+    reservationCode: 'QK-7744',
+    shop_id: 'b0000000-0000-0000-0000-000000000002', // Gupta
+    product_name: 'Aashirvaad Shudh Chakki Atta (5kg)',
+    quantity: 76,
+    unit: 'bag',
+    agreed_price: 245,
+    total_amount: 18620,
+    status: 'COMPLETED',
+    created_at: daysAgo(5),
+  },
+  {
+    _id: 'res_7d_07',
+    id: 'res_7d_07',
+    reservationCode: 'QK-5591',
+    shop_id: 'b0000000-0000-0000-0000-000000000002', // Gupta
+    product_name: 'Parle-G Gold Biscuits (1kg)',
+    quantity: 65,
+    unit: 'pack',
+    agreed_price: 130,
+    total_amount: 8450,
+    status: 'COMPLETED',
+    created_at: daysAgo(6),
+  },
+  {
+    _id: 'res_7d_08',
+    id: 'res_7d_08',
+    reservationCode: 'QK-9201',
+    shop_id: 'b0000000-0000-0000-0000-000000000003', // City Plumbing (Lajpat Nagar ~9.8km)
+    product_name: 'Astral CPVC Pro Pipe 1 inch (3 Meter)',
+    quantity: 42,
+    unit: 'piece',
+    agreed_price: 390,
+    total_amount: 16380,
+    status: 'COMPLETED',
+    created_at: daysAgo(3),
+  },
+  {
+    _id: 'res_7d_09',
+    id: 'res_7d_09',
+    reservationCode: 'QK-6623',
+    shop_id: 'b0000000-0000-0000-0000-000000000003', // City Plumbing
+    product_name: 'Tata Salt Vacuum Evaporated (1kg)',
+    quantity: 85,
+    unit: 'packet',
+    agreed_price: 28,
+    total_amount: 2380,
+    status: 'COMPLETED',
+    created_at: daysAgo(4),
+  },
+
+  // LAST 30 DAYS
+  {
+    _id: 'res_30d_01',
+    id: 'res_30d_01',
+    reservationCode: 'QK-1021',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Amul Taaza Milk 1L',
+    quantity: 380,
+    unit: 'pouch',
+    agreed_price: 65,
+    total_amount: 24700,
+    status: 'COMPLETED',
+    created_at: daysAgo(15),
+  },
+  {
+    _id: 'res_30d_02',
+    id: 'res_30d_02',
+    reservationCode: 'QK-1022',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Aashirvaad Shudh Chakki Atta (5kg)',
+    quantity: 240,
+    unit: 'bag',
+    agreed_price: 245,
+    total_amount: 58800,
+    status: 'COMPLETED',
+    created_at: daysAgo(18),
+  },
+  {
+    _id: 'res_30d_03',
+    id: 'res_30d_03',
+    reservationCode: 'QK-1023',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Tata Salt Vacuum Evaporated (1kg)',
+    quantity: 190,
+    unit: 'packet',
+    agreed_price: 28,
+    total_amount: 5320,
+    status: 'COMPLETED',
+    created_at: daysAgo(22),
+  },
+  {
+    _id: 'res_30d_04',
+    id: 'res_30d_04',
+    reservationCode: 'QK-1024',
+    shop_id: 'b0000000-0000-0000-0000-000000000001', // Sharma
+    product_name: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
+    quantity: 180,
+    unit: 'piece',
+    agreed_price: 290,
+    total_amount: 52200,
+    status: 'COMPLETED',
+    created_at: daysAgo(24),
+  },
+  {
+    _id: 'res_30d_05',
+    id: 'res_30d_05',
+    reservationCode: 'QK-2025',
+    shop_id: 'b0000000-0000-0000-0000-000000000002', // Gupta (Connaught Place ~2.3km)
+    product_name: 'Amul Taaza Milk 1L',
+    quantity: 462,
+    unit: 'pouch',
+    agreed_price: 65,
+    total_amount: 30030,
+    status: 'COMPLETED',
+    created_at: daysAgo(12),
+  },
+  {
+    _id: 'res_30d_06',
+    id: 'res_30d_06',
+    reservationCode: 'QK-2026',
+    shop_id: 'b0000000-0000-0000-0000-000000000002', // Gupta
+    product_name: 'Aashirvaad Shudh Chakki Atta (5kg)',
+    quantity: 473,
+    unit: 'bag',
+    agreed_price: 245,
+    total_amount: 115885,
+    status: 'COMPLETED',
+    created_at: daysAgo(20),
+  },
+  {
+    _id: 'res_30d_07',
+    id: 'res_30d_07',
+    reservationCode: 'QK-2027',
+    shop_id: 'b0000000-0000-0000-0000-000000000002', // Gupta
+    product_name: 'Tata Salt Vacuum Evaporated (1kg)',
+    quantity: 438,
+    unit: 'packet',
+    agreed_price: 28,
+    total_amount: 12264,
+    status: 'COMPLETED',
+    created_at: daysAgo(25),
+  },
+  {
+    _id: 'res_30d_08',
+    id: 'res_30d_08',
+    reservationCode: 'QK-2028',
+    shop_id: 'b0000000-0000-0000-0000-000000000002', // Gupta
+    product_name: 'Parle-G Gold Biscuits (1kg)',
+    quantity: 521,
+    unit: 'pack',
+    agreed_price: 130,
+    total_amount: 67730,
+    status: 'COMPLETED',
+    created_at: daysAgo(21),
+  },
+  {
+    _id: 'res_30d_09',
+    id: 'res_30d_09',
+    reservationCode: 'QK-3029',
+    shop_id: 'b0000000-0000-0000-0000-000000000003', // City Plumbing (~9.8km)
+    product_name: 'Astral CPVC Pro Pipe 1 inch (3 Meter)',
+    quantity: 290,
+    unit: 'piece',
+    agreed_price: 390,
+    total_amount: 113100,
+    status: 'COMPLETED',
+    created_at: daysAgo(16),
+  },
+  {
+    _id: 'res_30d_10',
+    id: 'res_30d_10',
+    reservationCode: 'QK-3030',
+    shop_id: 'b0000000-0000-0000-0000-000000000003', // City Plumbing
+    product_name: 'Bosch Professional 500W Impact Drill Kit',
+    quantity: 34,
+    unit: 'kit',
+    agreed_price: 2850,
+    total_amount: 96900,
+    status: 'COMPLETED',
+    created_at: daysAgo(27),
+  },
+
+  // LAST 90 DAYS (Noida & NCR)
+  {
+    _id: 'res_90d_01',
+    id: 'res_90d_01',
+    reservationCode: 'QK-4001',
+    shop_id: 'b0000000-0000-0000-0000-000000000004', // Noida (~18.5km)
+    product_name: 'Amul Taaza Milk 1L',
+    quantity: 1250,
+    unit: 'pouch',
+    agreed_price: 65,
+    total_amount: 81250,
+    status: 'COMPLETED',
+    created_at: daysAgo(55),
+  },
+  {
+    _id: 'res_90d_02',
+    id: 'res_90d_02',
+    reservationCode: 'QK-4002',
+    shop_id: 'b0000000-0000-0000-0000-000000000004', // Noida
+    product_name: 'Aashirvaad Shudh Chakki Atta (5kg)',
+    quantity: 890,
+    unit: 'bag',
+    agreed_price: 245,
+    total_amount: 218050,
+    status: 'COMPLETED',
+    created_at: daysAgo(65),
+  },
+  {
+    _id: 'res_90d_03',
+    id: 'res_90d_03',
+    reservationCode: 'QK-4003',
+    shop_id: 'b0000000-0000-0000-0000-000000000004', // Noida
+    product_name: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
+    quantity: 610,
+    unit: 'piece',
+    agreed_price: 290,
+    total_amount: 176900,
+    status: 'COMPLETED',
+    created_at: daysAgo(75),
+  }
+];
+
+// Rich Customer Product Requests with Bargain / Taraju state machine
+export let FALLBACK_CUSTOMER_REQUESTS = [
+  {
+    _id: 'req_cust_001',
+    id: 'req_cust_001',
+    productName: 'Amul Taaza Milk 1L',
+    productImage: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80',
+    category: 'Groceries & Daily Essentials',
+    quantity: 2,
+    unit: 'pouch',
+    shopStock: 8,
+    customerOffer: 58,
+    currentPrice: 65,
+    status: 'PENDING', // PENDING | BARGAINING | ACCEPTED | REJECTED | CONFIRMED
+    urgency: 'immediate',
+    customerName: 'Aman Deep Singh',
+    customerPhone: '+91 9811884422',
+    notes: 'Need 2 packets urgently for evening tea and kids.',
+    createdAt: daysAgo(0, 1),
+    negotiationHistory: [
+      {
+        sender: 'customer',
+        senderName: 'Aman Deep Singh',
+        offer: 58,
+        message: 'Can you give ₹58? Taking 2 packets.',
+        time: daysAgo(0, 1),
+      }
+    ],
+  },
+  {
+    _id: 'req_cust_002',
+    id: 'req_cust_002',
+    productName: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
+    productImage: 'https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80',
+    category: 'Plumbing & Sanitary',
+    quantity: 10,
+    unit: 'piece',
+    shopStock: 45,
+    customerOffer: 270,
+    currentPrice: 290,
+    status: 'BARGAINING',
+    urgency: 'today',
+    customerName: 'Rajesh Plumbers',
+    customerPhone: '+91 9877443311',
+    notes: 'Urgent plumbing repair job at Karol Bagh building.',
+    createdAt: daysAgo(0, 2),
+    negotiationHistory: [
+      {
+        sender: 'customer',
+        senderName: 'Rajesh Plumbers',
+        offer: 260,
+        message: 'Can you give ₹260 for bulk 10 pieces?',
+        time: daysAgo(0, 2),
+      },
+      {
+        sender: 'shopkeeper',
+        senderName: 'Sharma Hardware',
+        offer: 275,
+        message: 'I can offer ₹275 with priority counter dispatch.',
+        time: daysAgo(0, 1),
+      },
+      {
+        sender: 'customer',
+        senderName: 'Rajesh Plumbers',
+        offer: 270,
+        message: '₹270 final? Coming in 15 mins.',
+        time: daysAgo(0, 0),
+      }
+    ],
+  },
+  {
+    _id: 'req_cust_003',
+    id: 'req_cust_003',
+    productName: 'Bosch Professional 500W Impact Drill Kit',
+    productImage: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=600&q=80',
+    category: 'Hardware & Tools',
+    quantity: 1,
+    unit: 'kit',
+    shopStock: 8,
+    customerOffer: 2650,
+    currentPrice: 2850,
+    status: 'PENDING',
+    urgency: 'today',
+    customerName: 'Sanjay Kumar',
+    customerPhone: '+91 9911223388',
+    notes: 'Contractor on site, need genuine Bosch with warranty card.',
+    createdAt: daysAgo(0, 3),
+    negotiationHistory: [
+      {
+        sender: 'customer',
+        senderName: 'Sanjay Kumar',
+        offer: 2650,
+        message: 'Can you match ₹2650? Paying cash at pickup.',
+        time: daysAgo(0, 3),
+      }
+    ],
+  },
+  {
+    _id: 'req_cust_004',
+    id: 'req_cust_004',
+    productName: 'Astral CPVC Pro Pipe 1 inch (3 Meter)',
+    productImage: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=600&q=80',
+    category: 'Plumbing & Sanitary',
+    quantity: 2,
+    unit: 'piece',
+    shopStock: 3, // Low stock warning in shop!
+    customerOffer: 360,
+    currentPrice: 390,
+    status: 'BARGAINING',
+    urgency: 'immediate',
+    customerName: 'Rohit Sharma',
+    customerPhone: '+91 9811556677',
+    notes: 'Burst hot water line repair.',
+    createdAt: daysAgo(0, 4),
+    negotiationHistory: [
+      {
+        sender: 'customer',
+        senderName: 'Rohit Sharma',
+        offer: 350,
+        message: 'Can you give ₹350 each?',
+        time: daysAgo(0, 4),
+      },
+      {
+        sender: 'shopkeeper',
+        senderName: 'Sharma Hardware',
+        offer: 375,
+        message: 'I only have 3 left, ₹375 is fair.',
+        time: daysAgo(0, 3),
+      },
+      {
+        sender: 'customer',
+        senderName: 'Rohit Sharma',
+        offer: 365,
+        message: 'Can you do ₹365? Picking up now.',
+        time: daysAgo(0, 2),
+      }
+    ],
   }
 ];

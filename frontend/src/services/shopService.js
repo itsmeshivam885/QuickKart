@@ -25,4 +25,9 @@ export const shopService = {
     const res = await api.put('/shops/my-shop', shopData);
     return res.data;
   },
+
+  getRegionalRanking: async (params = {}) => {
+    const res = await api.get('/shops/regional-ranking', { params });
+    return res.data;
+  },
 };
