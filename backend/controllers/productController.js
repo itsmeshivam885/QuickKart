@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase.js';
-import { FALLBACK_PRODUCTS } from '../utils/fallbackData.js';
+import { FALLBACK_PRODUCTS, FALLBACK_SHOPS } from '../utils/fallbackData.js';
 
 // @desc    List & search products across nearby shops using Supabase
 // @route   GET /api/products
@@ -80,9 +80,32 @@ export const getProducts = async (req, res, next) => {
       }
     }
 
-    let filtered = FALLBACK_PRODUCTS;
-    if (category && category !== 'All') filtered = filtered.filter((p) => p.category === category);
-    if (search) filtered = filtered.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+    let filtered = [...FALLBACK_PRODUCTS];
+    if (shopId) {
+      filtered = filtered.filter((p) => {
+        const pShopId = p.shopId?._id || p.shopId?.id || p.shopId || p.shop_id;
+        return pShopId === shopId;
+      });
+    }
+    if (category && category !== 'All') {
+      filtered = filtered.filter((p) => p.category?.toLowerCase() === category.toLowerCase());
+    }
+    if (minPrice) {
+      filtered = filtered.filter((p) => p.price >= parseFloat(minPrice));
+    }
+    if (maxPrice) {
+      filtered = filtered.filter((p) => p.price <= parseFloat(maxPrice));
+    }
+    if (search) {
+      const s = search.toLowerCase();
+      filtered = filtered.filter((p) =>
+        (p.name && p.name.toLowerCase().includes(s)) ||
+        (p.brand && p.brand.toLowerCase().includes(s)) ||
+        (p.description && p.description.toLowerCase().includes(s)) ||
+        (p.category && p.category.toLowerCase().includes(s)) ||
+        (Array.isArray(p.tags) && p.tags.some((t) => t.toLowerCase().includes(s)))
+      );
+    }
 
     res.json({
       success: true,
@@ -259,17 +282,42 @@ export const createProduct = async (req, res, next) => {
       });
     }
 
+    // Fallback mode with in-memory persistence
+    const newId = 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
+    const targetShop = FALLBACK_SHOPS.find(s => s.id === shopId || s._id === shopId || s.owner_id === req.user?.id) || FALLBACK_SHOPS[0];
+    const qty = parseInt(quantityInStock !== undefined ? quantityInStock : quantity_in_stock) || 10;
+    const parsedPrice = parseFloat(price);
+    const parsedMrp = mrp ? parseFloat(mrp) : parsedPrice * 1.15;
+    const newProduct = {
+      _id: newId,
+      id: newId,
+      name: name.trim(),
+      brand: brand || 'Generic Brand',
+      description: description || '',
+      category,
+      price: parsedPrice,
+      mrp: parsedMrp,
+      unit: unit || 'piece',
+      quantityInStock: qty,
+      lowStockThreshold: parseInt(lowStockThreshold || low_stock_threshold) || 3,
+      stockStatus: qty > 3 ? 'in_stock' : qty > 0 ? 'low_stock' : 'out_of_stock',
+      isAvailable: isAvailable !== undefined ? !!isAvailable : true,
+      images: Array.isArray(images) && images.length > 0 ? images : ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'],
+      tags: Array.isArray(tags) ? tags : [],
+      shopId: {
+        _id: targetShop.id,
+        id: targetShop.id,
+        shopName: targetShop.shopName,
+        rating: targetShop.rating || 4.8,
+        address: targetShop.address,
+      },
+    };
+    FALLBACK_PRODUCTS.unshift(newProduct);
+
     res.status(201).json({
       success: true,
-      message: 'Product added successfully',
-      product: {
-        _id: 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14),
-        id: 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14),
-        name,
-        category,
-        price: parseFloat(price),
-        quantityInStock: parseInt(quantityInStock) || 10,
-      },
+      message: 'Product registered successfully across catalog',
+      product: newProduct,
     });
   } catch (error) {
     next(error);

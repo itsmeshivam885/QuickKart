@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js';
+import { FALLBACK_RESERVATIONS, FALLBACK_SHOPS } from '../utils/fallbackData.js';
 
 // @desc    Create In-Store Hold & Reservation Ticket (Chapter 5.4 / Fig 5.4)
 // @route   POST /api/reservations
@@ -32,13 +33,11 @@ export const createReservation = async (req, res, next) => {
             product_id: productId || null,
             product_name: productName,
             quantity: parseInt(quantity) || 1,
-            unit: 'piece',
             agreed_price: parseFloat(agreedPrice),
             total_amount: totalAmount,
-            status: 'PENDING',
-            hold_duration_minutes: parseInt(holdDurationMinutes) || 60,
+            status: 'CONFIRMED',
             expires_at: expiresAt,
-            customer_note: customerNote,
+            customer_note: customerNote || null,
           },
         ])
         .select('*, shops(id, shop_name, contact_phone, address)')
@@ -46,14 +45,19 @@ export const createReservation = async (req, res, next) => {
 
       if (error) throw error;
 
-      // Real-time socket notification to shopkeeper
+      // Real-time notification to shop room
       const io = req.app.get('io');
-      if (io) {
-        io.emit('new_reservation', {
-          reservationCode,
-          productName,
-          quantity,
-          shopId: targetShopId,
+      if (io && reservation) {
+        io.to(`shop_${reservation.shop_id}`).emit('new_reservation_hold', {
+          reservationId: reservation.id,
+          reservationCode: reservation.reservation_code,
+          productName: reservation.product_name,
+          quantity: reservation.quantity,
+          agreedPrice: reservation.agreed_price,
+          totalAmount: reservation.total_amount,
+          status: reservation.status,
+          customerName: req.user.name,
+          customerPhone: req.user.phone,
         });
       }
 
@@ -83,25 +87,52 @@ export const createReservation = async (req, res, next) => {
       });
     }
 
+    // Fallback mode with synchronized in-memory persistence
+    const targetShop = FALLBACK_SHOPS.find(s => s.id === shopId || s._id === shopId) || FALLBACK_SHOPS[0];
+    const newReservation = {
+      _id: 'res_' + Date.now(),
+      id: 'res_' + Date.now(),
+      reservationCode,
+      customer_id: req.user.id,
+      shop_id: targetShop.id,
+      product_name: productName,
+      productName,
+      quantity: parseInt(quantity) || 1,
+      unit: 'piece',
+      agreed_price: parseFloat(agreedPrice),
+      agreedPrice: parseFloat(agreedPrice),
+      total_amount: totalAmount,
+      totalAmount,
+      status: 'CONFIRMED',
+      customerNote: customerNote || '',
+      expires_at: expiresAt,
+      expiresAt,
+      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      customer: {
+        name: req.user.name || 'Rahul Sharma',
+        phone: req.user.phone || '+91 9811223344',
+      },
+      shop: {
+        id: targetShop.id,
+        shopName: targetShop.shopName,
+        contactPhone: targetShop.contactPhone,
+        address: targetShop.address,
+      },
+      shopId: {
+        _id: targetShop.id,
+        id: targetShop.id,
+        shopName: targetShop.shopName,
+        contactPhone: targetShop.contactPhone,
+        address: targetShop.address,
+      },
+    };
+    FALLBACK_RESERVATIONS.unshift(newReservation);
+
     res.status(201).json({
       success: true,
       message: 'In-store hold ticket created successfully!',
-      reservation: {
-        _id: 'res_' + Date.now(),
-        id: 'res_' + Date.now(),
-        reservationCode,
-        productName,
-        quantity: parseInt(quantity) || 1,
-        agreedPrice: parseFloat(agreedPrice),
-        totalAmount,
-        status: 'PENDING',
-        expiresAt,
-        shopId: {
-          shopName: 'Sharma Hardware & Sanitation Store',
-          contactPhone: '+91 9876543210',
-          address: { street: 'Shop 14, Karol Bagh', city: 'New Delhi' },
-        },
-      },
+      reservation: newReservation,
     });
   } catch (error) {
     next(error);
@@ -152,29 +183,11 @@ export const getCustomerReservations = async (req, res, next) => {
       }
     }
 
+    const myRes = FALLBACK_RESERVATIONS.filter(r => r.customer_id === req.user.id || !r.customer_id);
     res.json({
       success: true,
-      count: 1,
-      reservations: [
-        {
-          _id: 'sample_res_1',
-          id: 'sample_res_1',
-          reservationCode: 'QK-8421',
-          productName: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
-          quantity: 2,
-          agreedPrice: 290,
-          totalAmount: 580,
-          status: 'READY',
-          expiresAt: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
-          createdAt: new Date().toISOString(),
-          shopId: {
-            _id: 'shop_1',
-            shopName: 'Sharma Hardware & Sanitation Store',
-            contactPhone: '+91 9876543210',
-            address: { street: 'Shop 14, Karol Bagh', city: 'New Delhi' },
-          },
-        },
-      ],
+      count: myRes.length,
+      reservations: myRes.length > 0 ? myRes : FALLBACK_RESERVATIONS.slice(0, 5),
     });
   } catch (error) {
     next(error);
@@ -289,10 +302,26 @@ export const updateReservationStatus = async (req, res, next) => {
       });
     }
 
+    // Fallback mode with in-memory persistence
+    const targetResv = FALLBACK_RESERVATIONS.find((r) => r.id === id || r._id === id);
+    if (targetResv) {
+      targetResv.status = normalizedStatus;
+      targetResv.updated_at = new Date().toISOString();
+    }
+
+    // Socket notification
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('reservation_updated', {
+        id,
+        status: normalizedStatus,
+      });
+    }
+
     res.json({
       success: true,
       message: `Reservation moved to ${normalizedStatus}`,
-      reservation: {
+      reservation: targetResv || {
         id,
         status: normalizedStatus,
       },
@@ -353,28 +382,22 @@ export const getShopReservations = async (req, res, next) => {
       }
     }
 
+    // In fallback mode, filter by shopkeeper or return all for admin
+    const myShop = FALLBACK_SHOPS.find(s => s.owner_id === req.user?.id) || FALLBACK_SHOPS[0];
+    const shopReservations = req.user?.role === 'admin'
+      ? FALLBACK_RESERVATIONS
+      : FALLBACK_RESERVATIONS.filter(r => r.shop_id === myShop.id || r.shop_id === myShop._id);
+
     res.json({
       success: true,
-      count: 1,
-      reservations: [
-        {
-          _id: 'b0000000-0000-0000-0000-000000000001',
-          id: 'b0000000-0000-0000-0000-000000000001',
-          reservationCode: 'QK-8421',
-          productName: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
-          quantity: 2,
-          agreedPrice: 290,
-          totalAmount: 580,
-          status: 'PENDING',
-          expiresAt: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
-          createdAt: new Date().toISOString(),
-        },
-      ],
+      count: shopReservations.length,
+      reservations: shopReservations.length > 0 ? shopReservations : FALLBACK_RESERVATIONS,
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 // Aliases for backwards compatibility
 export const getMyReservations = getCustomerReservations;

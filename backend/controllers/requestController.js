@@ -51,7 +51,7 @@ export const createRequest = async (req, res, next) => {
       });
     }
 
-    // Fallback response
+    // Fallback response with in-memory persistence
     const mockRequest = {
       _id: 'req_' + Date.now(),
       id: 'req_' + Date.now(),
@@ -65,7 +65,23 @@ export const createRequest = async (req, res, next) => {
       notes,
       status: 'ACTIVE',
       createdAt: new Date().toISOString(),
+      customerName: req.user.name || 'Rahul Sharma',
+      customerPhone: req.user.phone || '+91 9811223344',
+      responses: [],
     };
+    FALLBACK_CUSTOMER_REQUESTS.unshift(mockRequest);
+
+    // Broadcast socket event
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('new_broadcast_request', {
+        requestId: mockRequest.id,
+        productName: mockRequest.productName,
+        category: mockRequest.category,
+        quantity: mockRequest.quantity,
+        unit: mockRequest.unit,
+      });
+    }
 
     res.status(201).json({
       success: true,

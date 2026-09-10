@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { supabase } from '../config/supabase.js';
+import { FALLBACK_USERS } from '../utils/fallbackData.js';
 
 const getJwtSecret = () => process.env.JWT_SECRET || 'quickkart_jwt_secret_key_2026_super_secure';
 
@@ -42,14 +43,21 @@ export const protect = async (req, res, next) => {
           _id: user.id,
         };
       } else {
-        // Fallback user context when operating without direct database connection
+        // Fallback user context from synchronized in-memory list
+        const found = FALLBACK_USERS.find(u => u.id === decoded.id || u._id === decoded.id);
+        if (found && found.status === 'suspended') {
+          return res.status(403).json({ success: false, message: 'Account has been suspended by administration' });
+        }
+
         req.user = {
           id: decoded.id,
           _id: decoded.id,
-          role: decoded.role || 'customer',
-          name: 'QuickKart User',
-          email: 'user@quickkart.com',
-          status: 'active',
+          role: (found && found.role) || decoded.role || 'customer',
+          name: (found && found.name) || 'QuickKart User',
+          email: (found && found.email) || 'user@quickkart.com',
+          status: (found && found.status) || 'active',
+          phone: (found && found.phone) || null,
+          address: (found && found.address) || {},
         };
       }
 

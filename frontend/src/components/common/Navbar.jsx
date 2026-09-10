@@ -266,16 +266,35 @@ export const Navbar = () => {
                   Admin Hub
                 </Link>
                 <Link
-                  to="/admin/shops"
-                  className="px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  to="/admin/map"
+                  className="px-3 py-2 rounded-xl text-sm font-bold text-brand-600 hover:text-brand-700 hover:bg-brand-50/50 flex items-center gap-1"
                 >
-                  Verify Shops
+                  <Navigation className="w-3.5 h-3.5" />
+                  Regional Map
                 </Link>
                 <Link
                   to="/admin/users"
                   className="px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 >
                   Users
+                </Link>
+                <Link
+                  to="/admin/shops"
+                  className="px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                >
+                  Stores
+                </Link>
+                <Link
+                  to="/admin/products"
+                  className="px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                >
+                  Products
+                </Link>
+                <Link
+                  to="/admin/reports"
+                  className="px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                >
+                  Sales & Reports
                 </Link>
                 <Link
                   to="/admin/categories"
@@ -547,18 +566,39 @@ export const Navbar = () => {
                     Admin Hub
                   </Link>
                   <Link
-                    to="/admin/shops"
+                    to="/admin/map"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                    className="block px-3 py-2 rounded-xl text-sm font-bold text-brand-600 hover:bg-brand-50"
                   >
-                    Verify Shops
+                    🗺️ Regional Sales Map
                   </Link>
                   <Link
                     to="/admin/users"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
                   >
-                    Users
+                    Users (Customers & Sellers)
+                  </Link>
+                  <Link
+                    to="/admin/shops"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Store Verification & Status
+                  </Link>
+                  <Link
+                    to="/admin/products"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Products Catalog
+                  </Link>
+                  <Link
+                    to="/admin/reports"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Sales & Traffic Reports
                   </Link>
                   <Link
                     to="/admin/categories"
