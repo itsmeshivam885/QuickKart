@@ -1,9 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, ShoppingBag, Store, MessageSquare, Check, AlertCircle } from 'lucide-react';
+import { MapPin, ShoppingBag, Store, MessageSquare, Star, TrendingUp, Clock, HandCoins } from 'lucide-react';
 import { Badge } from '../common/Badge';
 
-export const ProductCard = ({ product, onReserveClick, onChatClick }) => {
+export const ProductCard = ({ product, onReserveClick, onChatClick, onBargain, medicalMode = false }) => {
   const discountPercent =
     product.mrp && product.mrp > product.price
       ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
@@ -58,6 +58,25 @@ export const ProductCard = ({ product, onReserveClick, onChatClick }) => {
             {product.name}
           </h4>
 
+          <div className="flex items-center gap-2 mt-1.5 text-[11px]">
+            {product.rating !== undefined && (
+              <span className="flex items-center gap-0.5 font-bold text-amber-700">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {product.rating.toFixed(1)}
+                <span className="font-normal text-slate-400">({product.reviewCount || 0})</span>
+              </span>
+            )}
+            {product.demandLabel && (
+              <span className="flex items-center gap-0.5 text-emerald-600 font-semibold">
+                <TrendingUp className="w-3 h-3" /> {product.demandLabel}
+              </span>
+            )}
+          </div>
+          {product.lastStockUpdate && (
+            <div className="flex items-center gap-1 text-[10px] text-slate-400 mt-1">
+              <Clock className="w-3 h-3" /> Stock checked {product.lastStockUpdate}
+            </div>
+          )}
+
           {/* Pricing */}
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-lg font-black text-slate-900">
@@ -70,6 +89,7 @@ export const ProductCard = ({ product, onReserveClick, onChatClick }) => {
             )}
             <span className="text-xs text-slate-500">/ {product.unit}</span>
           </div>
+
         </div>
 
         {/* Shop Info Footer */}
@@ -96,6 +116,16 @@ export const ProductCard = ({ product, onReserveClick, onChatClick }) => {
 
           {/* Actions */}
           <div className="flex items-center gap-2 pt-1">
+            {onBargain && (
+              <button
+                type="button"
+                onClick={() => onBargain(product)}
+                className="p-2 rounded-xl text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
+                title="Bargain with shop owner"
+              >
+                <HandCoins className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => onChatClick && onChatClick(product)}
               className="p-2 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
@@ -113,7 +143,7 @@ export const ProductCard = ({ product, onReserveClick, onChatClick }) => {
               }`}
             >
               <ShoppingBag className="w-3.5 h-3.5" />
-              Hold & Reserve
+              {medicalMode ? 'Hold at Pharmacy' : 'Hold & Reserve'}
             </button>
           </div>
         </div>
