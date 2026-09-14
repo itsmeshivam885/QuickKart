@@ -4,11 +4,12 @@ import { shopService } from '../../services/shopService';
 import { chatService } from '../../services/chatService';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
-import { ProductCard } from '../../components/customer/ProductCard';
+import { CustomerInventoryBoard } from '../../components/customer/CustomerInventoryBoard';
 import { ReservationModal } from '../../components/customer/ReservationModal';
 import { BroadcastRequestModal } from '../../components/customer/BroadcastRequestModal';
 import { StarRating } from '../../components/common/StarRating';
 import { Badge } from '../../components/common/Badge';
+import { getSehoreDemoData } from '../../components/customer/sehoreDemoData';
 import {
   Store,
   MapPin,
@@ -41,6 +42,19 @@ export const ShopProfilePage = () => {
   useEffect(() => {
     const loadShopData = async () => {
       setLoading(true);
+      // Demo shops (Kothri Kalan / Ashta / Bhopal) are served from local demo data
+      // so they never fall back to the backend's default store profile.
+      if (id && String(id).startsWith('sehore-demo-')) {
+        const demo = getSehoreDemoData();
+        const demoShop = demo.shops.find((s) => s._id === id);
+        if (demoShop) {
+          setShop(demoShop);
+          setProducts(demo.products.filter((p) => (p.shopId?._id || p.shopId) === id));
+          setReviews([]);
+          setLoading(false);
+          return;
+        }
+      }
       try {
         const res = await shopService.getShopById(id, {
           lng: coordinates[0],
@@ -48,11 +62,14 @@ export const ShopProfilePage = () => {
         });
         if (res.success) {
           setShop(res.shop);
-          setProducts(res.products);
-          setReviews(res.reviews);
+          setProducts(Array.isArray(res.products) ? res.products : []);
+          setReviews(Array.isArray(res.reviews) ? res.reviews : []);
         }
       } catch (err) {
         console.error('Error loading shop profile:', err);
+        setShop(null);
+        setProducts([]);
+        setReviews([]);
       } finally {
         setLoading(false);
       }
@@ -272,16 +289,12 @@ export const ShopProfilePage = () => {
                 No products currently listed for this store.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {products.map((p) => (
-                  <ProductCard
-                    key={p._id}
-                    product={{ ...p, shopId: shop }}
-                    onReserveClick={(item) => setReserveTarget(item)}
-                    onChatClick={() => handleStartChat(p)}
-                  />
-                ))}
-              </div>
+              <CustomerInventoryBoard
+                products={products.map((product) => ({ ...product, shopId: shop }))}
+                shopId={shop._id}
+                onReserveClick={(item) => setReserveTarget(item)}
+                onChatClick={(product) => handleStartChat(product)}
+              />
             )}
           </div>
 

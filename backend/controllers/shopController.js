@@ -1,6 +1,6 @@
 import { supabase } from '../config/supabase.js';
 import { calculateDistanceKm } from '../utils/geoCoder.js';
-import { FALLBACK_SHOPS } from '../utils/fallbackData.js';
+import { FALLBACK_SHOPS, FALLBACK_PRODUCTS, FALLBACK_RESERVATIONS } from '../utils/fallbackData.js';
 
 // @desc    Get nearby shops with geospatial filtering & search using Supabase
 // @route   GET /api/shops/nearby
@@ -379,6 +379,234 @@ export const updateLiveBusinessState = async (req, res, next) => {
       success: true,
       message: 'Live business capability updated',
       shop: req.body,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Dynamic Regional Sales Ranking & My Shop vs Regional Demand (Features 4 & 5)
+// @route   GET /api/shops/regional-ranking
+// @access  Public / Private (Shopkeeper)
+export const getRegionalRanking = async (req, res, next) => {
+  try {
+    const {
+      range = '10', // 1, 5, 10, 25, 50, 100
+      period = '30d', // today, 7d, 30d, 90d, custom
+      startDate,
+      endDate,
+      shopId,
+    } = req.query;
+
+    const rangeKm = parseFloat(range) || 10;
+
+    // Determine current shop reference point
+    let myShop = null;
+    let shopCoords = [77.1906, 28.6517]; // Default Karol Bagh Sharma Hardware
+    let targetShopId = shopId || 'b0000000-0000-0000-0000-000000000001';
+
+    if (req.user) {
+      if (supabase) {
+        const { data: dbShop } = await supabase
+          .from('shops')
+          .select('id, location_lng, location_lat, shop_name')
+          .eq('owner_id', req.user.id)
+          .single();
+        if (dbShop) {
+          myShop = dbShop;
+          targetShopId = dbShop.id;
+          if (dbShop.location_lng && dbShop.location_lat) {
+            shopCoords = [dbShop.location_lng, dbShop.location_lat];
+          }
+        }
+      }
+    }
+
+    if (!myShop) {
+      const found = FALLBACK_SHOPS.find((s) => s.id === targetShopId || s._id === targetShopId) || FALLBACK_SHOPS[0];
+      shopCoords = found.location?.coordinates || [77.1906, 28.6517];
+      targetShopId = found.id || found._id;
+      myShop = found;
+    }
+
+    // Step 1: Identify all shops within selected geographical range
+    const allShops = FALLBACK_SHOPS.map((s) => {
+      const coords = s.location?.coordinates || [77.1906, 28.6517];
+      const dist = calculateDistanceKm(shopCoords, coords);
+      return {
+        ...s,
+        distKm: dist,
+        inRadius: dist <= rangeKm,
+      };
+    });
+
+    const inRangeShopIds = new Set(allShops.filter((s) => s.inRadius).map((s) => s.id));
+
+    // Step 2: Filter orders according to selected time period
+    const now = Date.now();
+    let minTimestamp = 0;
+    let maxTimestamp = now;
+
+    if (period === 'today') {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      minTimestamp = d.getTime();
+    } else if (period === '7d') {
+      minTimestamp = now - 7 * 24 * 60 * 60 * 1000;
+    } else if (period === '30d') {
+      minTimestamp = now - 30 * 24 * 60 * 60 * 1000;
+    } else if (period === '90d') {
+      minTimestamp = now - 90 * 24 * 60 * 60 * 1000;
+    } else if (period === 'custom') {
+      if (startDate) minTimestamp = new Date(startDate).getTime();
+      if (endDate) {
+        const ed = new Date(endDate);
+        ed.setHours(23, 59, 59, 999);
+        maxTimestamp = ed.getTime();
+      }
+    }
+
+    // Filter reservations/orders
+    const matchingReservations = FALLBACK_RESERVATIONS.filter((res) => {
+      // Must be within geographical range
+      if (!inRangeShopIds.has(res.shop_id)) return false;
+
+      // Must match time period
+      const t = new Date(res.created_at).getTime();
+      if (t < minTimestamp || t > maxTimestamp) return false;
+
+      return true;
+    });
+
+    // Step 3 & 4: Group sold products and calculate total quantity sold per product
+    const productAggregates = {};
+
+    matchingReservations.forEach((order) => {
+      const name = order.product_name;
+      if (!productAggregates[name]) {
+        // Find product catalog metadata if available
+        const catalogItem = FALLBACK_PRODUCTS.find(
+          (p) => p.name.toLowerCase() === name.toLowerCase()
+        );
+        productAggregates[name] = {
+          productName: name,
+          category: catalogItem?.category || 'General',
+          image: catalogItem?.images?.[0] || 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80',
+          price: catalogItem?.price || order.agreed_price,
+          unit: order.unit || 'piece',
+          totalQuantitySold: 0,
+          totalRevenue: 0,
+          orderCount: 0,
+          myShopQuantitySold: 0,
+          myShopStock: catalogItem?.quantityInStock !== undefined ? catalogItem.quantityInStock : 8,
+          lowStockThreshold: catalogItem?.lowStockThreshold || 5,
+        };
+      }
+
+      const qty = order.quantity || 1;
+      const rev = order.total_amount || (order.agreed_price * qty);
+
+      productAggregates[name].totalQuantitySold += qty;
+      productAggregates[name].totalRevenue += rev;
+      productAggregates[name].orderCount += 1;
+
+      if (order.shop_id === targetShopId) {
+        productAggregates[name].myShopQuantitySold += qty;
+      }
+    });
+
+    // Also include this shop's catalog products if they exist so the shopkeeper sees comparison
+    FALLBACK_PRODUCTS.forEach((p) => {
+      if (!productAggregates[p.name]) {
+        productAggregates[p.name] = {
+          productName: p.name,
+          category: p.category,
+          image: p.images?.[0] || 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=600&q=80',
+          price: p.price,
+          unit: p.unit || 'piece',
+          totalQuantitySold: 0,
+          totalRevenue: 0,
+          orderCount: 0,
+          myShopQuantitySold: 0,
+          myShopStock: p.quantityInStock,
+          lowStockThreshold: p.lowStockThreshold || 5,
+        };
+      }
+    });
+
+    // Step 5: Sort products by quantity sold descending
+    const rankings = Object.values(productAggregates)
+      .filter((p) => p.totalQuantitySold > 0 || p.myShopStock > 0)
+      .sort((a, b) => b.totalQuantitySold - a.totalQuantitySold);
+
+    // Compute regional totals
+    const totalRegionalUnits = rankings.reduce((acc, curr) => acc + curr.totalQuantitySold, 0);
+    const totalRegionalRevenue = rankings.reduce((acc, curr) => acc + curr.totalRevenue, 0);
+
+    // Step 6: Add Smart Indicators (Feature 5: My Shop vs Regional Demand)
+    const opportunities = [];
+
+    const decoratedRankings = rankings.map((prod, index) => {
+      const rank = index + 1;
+      const indicators = [];
+
+      // Top Seller badge
+      if (rank <= 3 && prod.totalQuantitySold > 10) {
+        indicators.push({ type: 'top_seller', label: '🏆 Top seller', color: 'bg-amber-100 text-amber-800 border-amber-300' });
+      }
+
+      // Trending badge (high recent velocity or rank 1-4)
+      if (prod.totalQuantitySold >= 25 || (period === 'today' && prod.totalQuantitySold >= 4)) {
+        indicators.push({ type: 'trending', label: '🔥 Trending', color: 'bg-rose-100 text-rose-800 border-rose-300' });
+      }
+
+      // High regional demand
+      const regionalShare = totalRegionalUnits > 0 ? (prod.totalQuantitySold / totalRegionalUnits) * 100 : 0;
+      if (prod.totalQuantitySold >= 30 || regionalShare >= 15) {
+        indicators.push({ type: 'high_demand', label: '📈 High regional demand', color: 'bg-indigo-100 text-indigo-800 border-indigo-300' });
+      }
+
+      // Low stock warning (stock <= threshold and in demand)
+      if (prod.myShopStock <= prod.lowStockThreshold) {
+        indicators.push({
+          type: 'low_stock',
+          label: prod.myShopStock === 0 ? '🚫 Out of stock' : '⚠️ Low stock',
+          color: prod.myShopStock === 0 ? 'bg-red-100 text-red-800 border-red-300' : 'bg-yellow-100 text-yellow-800 border-yellow-300'
+        });
+
+        if (prod.totalQuantitySold > 15) {
+          opportunities.push({
+            productName: prod.productName,
+            regionalSold: prod.totalQuantitySold,
+            myStock: prod.myShopStock,
+            recommendation: `High demand alert: ${prod.totalQuantitySold} units sold in ${rangeKm}km radius, but your store has only ${prod.myShopStock} units! Restock recommended.`,
+          });
+        }
+      }
+
+      return {
+        rank,
+        ...prod,
+        regionalSharePct: Math.round(regionalShare * 10) / 10,
+        indicators,
+      };
+    });
+
+    res.json({
+      success: true,
+      rangeKm,
+      period,
+      selectedShop: {
+        id: targetShopId,
+        shopName: myShop?.shopName || myShop?.shop_name || 'Sharma Hardware & Daily Essentials Store',
+        coordinates: shopCoords,
+      },
+      shopsInRangeCount: inRangeShopIds.size,
+      totalOrdersEvaluated: matchingReservations.length,
+      totalRegionalUnits,
+      totalRegionalRevenue,
+      rankings: decoratedRankings,
+      highDemandOpportunities: opportunities,
     });
   } catch (error) {
     next(error);

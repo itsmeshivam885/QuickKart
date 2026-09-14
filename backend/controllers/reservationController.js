@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js';
+import { FALLBACK_RESERVATIONS } from '../utils/fallbackData.js';
 
 // @desc    Create In-Store Hold & Reservation Ticket (Chapter 5.4 / Fig 5.4)
 // @route   POST /api/reservations
@@ -355,26 +356,14 @@ export const getShopReservations = async (req, res, next) => {
 
     res.json({
       success: true,
-      count: 1,
-      reservations: [
-        {
-          _id: 'b0000000-0000-0000-0000-000000000001',
-          id: 'b0000000-0000-0000-0000-000000000001',
-          reservationCode: 'QK-8421',
-          productName: 'Finolex 1-inch Heavy Duty PVC Pipe (10ft)',
-          quantity: 2,
-          agreedPrice: 290,
-          totalAmount: 580,
-          status: 'PENDING',
-          expiresAt: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
-          createdAt: new Date().toISOString(),
-        },
-      ],
+      count: FALLBACK_RESERVATIONS.length,
+      reservations: FALLBACK_RESERVATIONS,
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 // Aliases for backwards compatibility
 export const getMyReservations = getCustomerReservations;
