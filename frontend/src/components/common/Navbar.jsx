@@ -20,6 +20,7 @@ import {
   Sparkles,
   Menu,
   X,
+  Pencil,
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -113,7 +114,7 @@ export const Navbar = () => {
                     <span className="font-bold text-brand-600">{radiusKm} km</span>
                   </div>
                   <div className="flex gap-1.5">
-                    {[1, 3, 5, 10, 20].map((r) => (
+                    {[1, 3, 5, 10, 20, 60].map((r) => (
                       <button
                         key={r}
                         onClick={() => setRadiusKm(r)}
@@ -130,7 +131,7 @@ export const Navbar = () => {
                 </div>
 
                 {/* Preset Localities */}
-                <div className="space-y-1 max-h-48 overflow-y-auto">
+                <div className="space-y-1 max-h-64 overflow-y-auto">
                   <span className="text-[11px] font-semibold text-slate-400 px-2 block mb-1">
                     Popular Localities
                   </span>
@@ -381,11 +382,21 @@ export const Navbar = () => {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center gap-2 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
                 >
-                  <img
-                    src={user?.profileImage || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
-                    alt={user?.name}
-                    className="w-8 h-8 rounded-full object-cover ring-2 ring-brand-500/30"
-                  />
+                  {role === 'customer' && !(user?.profileImage || user?.profile_image) ? (
+                    <span className="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-black ring-2 ring-brand-500/30">
+                      {user?.name?.trim()?.charAt(0)?.toUpperCase() || 'C'}
+                    </span>
+                  ) : (
+                    <img
+                      src={
+                        role === 'customer'
+                          ? user?.profileImage || user?.profile_image
+                          : user?.profileImage || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
+                      }
+                      alt={user?.name}
+                      className="w-8 h-8 rounded-full object-cover ring-2 ring-brand-500/30"
+                    />
+                  )}
                   <span className="hidden md:inline text-xs font-bold text-slate-800">
                     {user?.name?.split(' ')[0]}
                   </span>
@@ -403,6 +414,16 @@ export const Navbar = () => {
                     </div>
 
                     <div className="py-1">
+                      {role === 'customer' && (
+                        <Link
+                          to="/customer/profile"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="w-full px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-700 flex items-center gap-2"
+                        >
+                          <Pencil className="w-4 h-4" />
+                          Edit Profile
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           setIsUserMenuOpen(false);
