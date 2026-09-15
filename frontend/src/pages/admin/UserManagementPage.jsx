@@ -85,7 +85,8 @@ export const UserManagementPage = () => {
       (u.shopName && u.shopName.toLowerCase().includes(q)) ||
       (u.shop?.shopName && u.shop.shopName.toLowerCase().includes(q)) ||
       (u.address?.area && u.address.area.toLowerCase().includes(q)) ||
-      (u.address?.city && u.address.city.toLowerCase().includes(q))
+      (u.address?.city && u.address.city.toLowerCase().includes(q)) ||
+      (u.address?.state && u.address.state.toLowerCase().includes(q))
     );
   });
 

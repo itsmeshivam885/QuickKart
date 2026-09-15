@@ -61,6 +61,126 @@ export let DEFAULT_ADMIN_USERS = [
     profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
     createdAt: '2026-01-01T00:00:00.000Z',
   },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000011',
+    id: 'a0000000-0000-0000-0000-000000000011',
+    name: 'Suresh Patidar',
+    email: 'kothri.kirana@quickkart.com',
+    role: 'shopkeeper',
+    phone: '+91 90000 00001',
+    address: { street: 'Main Village Road, Kothri Kalan', area: 'Kothri Kalan', city: 'Kothri Kalan, Sehore', state: 'Madhya Pradesh', pincode: '466114' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-12T08:00:00.000Z',
+    shopId: 'sehore-demo-001',
+    shopName: 'Kothri Kalan Kirana & General Store',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000012',
+    id: 'a0000000-0000-0000-0000-000000000012',
+    name: 'Ramesh Malviya',
+    email: 'ashta.hardware@quickkart.com',
+    role: 'shopkeeper',
+    phone: '+91 90000 00002',
+    address: { street: 'Main Market, Near Town Square', area: 'Ashta', city: 'Ashta, Sehore', state: 'Madhya Pradesh', pincode: '466116' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-14T09:00:00.000Z',
+    shopId: 'sehore-demo-002',
+    shopName: 'Ashta Hardware & Sanitation Mart',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000013',
+    id: 'a0000000-0000-0000-0000-000000000013',
+    name: 'Dinesh Patel',
+    email: 'ashta.electrical@quickkart.com',
+    role: 'shopkeeper',
+    phone: '+91 90000 00003',
+    address: { street: 'Krishi Mandi Road, Ashta', area: 'Ashta', city: 'Ashta, Sehore', state: 'Madhya Pradesh', pincode: '466116' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-15T11:00:00.000Z',
+    shopId: 'sehore-demo-003',
+    shopName: 'Ashta Electrical & Farm Centre',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000014',
+    id: 'a0000000-0000-0000-0000-000000000014',
+    name: 'Dr. R.K. Verma',
+    email: 'ashta.medical@quickkart.com',
+    role: 'shopkeeper',
+    phone: '+91 90000 00004',
+    address: { street: 'SH-70, Opposite Civil Hospital Ashta', area: 'Ashta', city: 'Ashta, Sehore', state: 'Madhya Pradesh', pincode: '466116' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-16T10:00:00.000Z',
+    shopId: 'sehore-demo-004',
+    shopName: 'Ashta Civil Medical Store',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000015',
+    id: 'a0000000-0000-0000-0000-000000000015',
+    name: 'Sunil Lalwani',
+    email: 'bairagarh.electronics@quickkart.com',
+    role: 'shopkeeper',
+    phone: '+91 90000 00005',
+    address: { street: 'Bairagarh Main Road, Near Bus Stop', area: 'Bairagarh', city: 'Bhopal', state: 'Madhya Pradesh', pincode: '462030' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-18T14:30:00.000Z',
+    shopId: 'sehore-demo-005',
+    shopName: 'Bairagarh Electronics & Mobile Hub',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000016',
+    id: 'a0000000-0000-0000-0000-000000000016',
+    name: 'Deepak Saxena',
+    email: 'newmarket.books@quickkart.com',
+    role: 'shopkeeper',
+    phone: '+91 90000 00006',
+    address: { street: 'New Market, TT Nagar', area: 'New Market', city: 'Bhopal', state: 'Madhya Pradesh', pincode: '462001' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-20T16:00:00.000Z',
+    shopId: 'sehore-demo-006',
+    shopName: 'New Market Books & Stationery Corner',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000021',
+    id: 'a0000000-0000-0000-0000-000000000021',
+    name: 'Aman Gupta (VIT Student)',
+    email: 'aman.vit@quickkart.com',
+    role: 'customer',
+    phone: '+91 9826011223',
+    address: { street: 'Block-2, VIT Bhopal University Campus', area: 'Kothri Kalan', city: 'Kothri Kalan, Sehore', state: 'Madhya Pradesh', pincode: '466114' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-22T11:20:00.000Z',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000022',
+    id: 'a0000000-0000-0000-0000-000000000022',
+    name: 'Priya Verma',
+    email: 'priya.sehore@quickkart.com',
+    role: 'customer',
+    phone: '+91 9826044556',
+    address: { street: 'Station Road, Near Bus Stand', area: 'Sehore City', city: 'Sehore', state: 'Madhya Pradesh', pincode: '466001' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-23T15:40:00.000Z',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000023',
+    id: 'a0000000-0000-0000-0000-000000000023',
+    name: 'Rajesh Chouhan',
+    email: 'rajesh.ashta@quickkart.com',
+    role: 'customer',
+    phone: '+91 9826077889',
+    address: { street: 'Krishi Mandi Road', area: 'Ashta', city: 'Ashta, Sehore', state: 'Madhya Pradesh', pincode: '466116' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-24T12:15:00.000Z',
+  },
 ];
 
 export const DEFAULT_TRAFFIC_STATS = {
@@ -882,7 +1002,7 @@ export const getGeoMapData = async (req, res, next) => {
     // States list with default center lat/lng
     const states = [
       { id: 'delhi', name: 'Delhi', center: [28.6139, 77.2090], zoom: 12 },
-      { id: 'madhya-pradesh', name: 'Madhya Pradesh', center: [23.2599, 77.4126], zoom: 11 },
+      { id: 'madhya-pradesh', name: 'Madhya Pradesh', center: [23.15, 76.95], zoom: 10 },
       { id: 'uttar-pradesh', name: 'Uttar Pradesh', center: [28.6256, 77.3639], zoom: 12 },
       { id: 'haryana', name: 'Haryana', center: [28.4950, 77.0888], zoom: 13 },
       { id: 'maharashtra', name: 'Maharashtra', center: [19.0596, 72.8335], zoom: 12 },
@@ -898,6 +1018,7 @@ export const getGeoMapData = async (req, res, next) => {
         center: [28.6517, 77.1906],
         zoom: 14,
         description: 'Prime central wholesale and retail market for hardware, tools, sanitary and daily groceries.',
+        keywords: ['karol bagh'],
       },
       {
         id: 'connaught-place',
@@ -906,6 +1027,7 @@ export const getGeoMapData = async (req, res, next) => {
         center: [28.6304, 77.2177],
         zoom: 14,
         description: 'Heritage commercial circle with high density building materials, hardware and provisions.',
+        keywords: ['connaught', 'connaught place', 'cp'],
       },
       {
         id: 'lajpat-nagar',
@@ -914,22 +1036,52 @@ export const getGeoMapData = async (req, res, next) => {
         center: [28.5700, 77.2433],
         zoom: 14,
         description: 'Dense South Delhi market specializing in plumbing supplies, pipes, and electricals.',
+        keywords: ['lajpat', 'lajpat nagar'],
       },
       {
-        id: 'sehore',
-        name: 'Sehore',
+        id: 'vit-bhopal',
+        name: 'VIT Bhopal (Kothri Kalan)',
         state: 'Madhya Pradesh',
-        center: [23.2043, 77.0844],
+        center: [23.0755, 76.8498],
         zoom: 14,
-        description: 'Station Road, Mandi & Main Market regional trade hub for hardware, tools, sanitary, and agricultural essentials.',
+        description: 'VIT Bhopal University campus corridor & Kothri Kalan student trade hub on Bhopal-Indore Highway.',
+        keywords: ['vit bhopal', 'kothri', 'kothri kalan', 'vit'],
       },
       {
-        id: 'bhopal',
-        name: 'Bhopal',
+        id: 'ashta',
+        name: 'Ashta',
         state: 'Madhya Pradesh',
-        center: [23.2599, 77.4126],
-        zoom: 13,
-        description: 'Commercial capital corridor covering MP Nagar Zone-1 and New Market trade zones.',
+        center: [23.0195, 76.7222],
+        zoom: 14,
+        description: 'Town Square, Krishi Mandi Road & SH-70 trade zone for hardware, agro-electricals & civil medical supplies.',
+        keywords: ['ashta'],
+      },
+      {
+        id: 'sehore-city',
+        name: 'Sehore City',
+        state: 'Madhya Pradesh',
+        center: [23.2049, 77.0846],
+        zoom: 14,
+        description: 'Station Road, Mandi & Main Market regional trade hub for hardware, tools, sanitary, and daily essentials.',
+        keywords: ['sehore city', 'sehore'],
+      },
+      {
+        id: 'bhopal-bairagarh',
+        name: 'Bairagarh (Bhopal)',
+        state: 'Madhya Pradesh',
+        center: [23.2745, 77.3366],
+        zoom: 14,
+        description: 'Bairagarh commercial corridor specializing in electronics, mobile hubs, and hardware gadgets.',
+        keywords: ['bairagarh'],
+      },
+      {
+        id: 'bhopal-new-market',
+        name: 'New Market (Bhopal)',
+        state: 'Madhya Pradesh',
+        center: [23.2352, 77.4003],
+        zoom: 14,
+        description: 'New Market, TT Nagar prime commercial retail zone for stationery, books, and office equipment.',
+        keywords: ['new market'],
       },
       {
         id: 'noida',
@@ -938,6 +1090,7 @@ export const getGeoMapData = async (req, res, next) => {
         center: [28.6256, 77.3639],
         zoom: 14,
         description: 'Industrial and residential hub covering Sector 62 and electronic city hardware hubs.',
+        keywords: ['noida', 'sector 62'],
       },
       {
         id: 'cyber-hub',
@@ -946,6 +1099,7 @@ export const getGeoMapData = async (req, res, next) => {
         center: [28.4950, 77.0888],
         zoom: 15,
         description: 'Corporate and modern tech residential corridor with smart switches and electrical gear.',
+        keywords: ['cyber hub', 'gurugram', 'gurgaon'],
       },
       {
         id: 'bandra',
@@ -954,6 +1108,7 @@ export const getGeoMapData = async (req, res, next) => {
         center: [19.0596, 72.8335],
         zoom: 14,
         description: 'Western Mumbai suburban retail center with luxury hardware, smart locks, and provisions.',
+        keywords: ['bandra', 'mumbai'],
       },
       {
         id: 'indiranagar',
@@ -962,19 +1117,20 @@ export const getGeoMapData = async (req, res, next) => {
         center: [12.9784, 77.6412],
         zoom: 14,
         description: 'Eastern Bengaluru tech cluster with premium toolkits, power tools, and hardware essentials.',
+        keywords: ['indiranagar', 'bengaluru', 'bangalore'],
       },
     ];
 
     // Calculate metrics for each area
     const enrichedAreas = areas.map(a => {
-      const areaShops = shops.filter(s =>
-        (s.address?.area || '').toLowerCase().includes(a.name.toLowerCase()) ||
-        a.name.toLowerCase().includes((s.address?.area || '').toLowerCase())
-      );
+      const keywords = a.keywords || [a.name.toLowerCase()];
+      const areaShops = shops.filter(s => {
+        const text = `${s.address?.area || ''} ${s.address?.city || ''} ${s.address?.street || ''} ${s.shopName || ''} ${s.landmark || ''}`.toLowerCase();
+        return keywords.some(k => text.includes(k.toLowerCase()));
+      });
       const areaCustomers = users.filter(u =>
         u.role === 'customer' &&
-        ((u.address?.area || '').toLowerCase().includes(a.name.toLowerCase()) ||
-        a.name.toLowerCase().includes((u.address?.area || '').toLowerCase()))
+        keywords.some(k => `${u.address?.area || ''} ${u.address?.city || ''} ${u.address?.street || ''}`.toLowerCase().includes(k.toLowerCase()))
       );
       const activeShops = areaShops.filter(s => s.isActive !== false);
 
@@ -988,6 +1144,7 @@ export const getGeoMapData = async (req, res, next) => {
         totalRevenue: areaSales,
         shops: areaShops.map(s => ({
           id: s.id || s._id,
+          _id: s.id || s._id,
           shopName: s.shopName,
           category: s.category,
           isActive: s.isActive !== false,
@@ -998,6 +1155,7 @@ export const getGeoMapData = async (req, res, next) => {
           contactPhone: s.contactPhone,
           rating: s.rating,
           address: s.address,
+          totalSalesVolume: s.totalSalesVolume || 0,
         })),
       };
     });
@@ -1031,9 +1189,11 @@ export const getGeoMapData = async (req, res, next) => {
 let FALLBACK_CATEGORIES = [
   { id: '1', _id: '1', name: 'Hardware & Tools', slug: 'hardware-tools', icon: 'Hammer', description: 'Power tools, hand tools, fasteners, safety gear', popularKeywords: ['bosch', 'drill', 'tools', 'hammer'] },
   { id: '2', _id: '2', name: 'Plumbing & Sanitary', slug: 'plumbing-sanitary', icon: 'Droplets', description: 'PVC pipes, bathroom fittings, water tanks, valves', popularKeywords: ['astral', 'finolex', 'cpvc', 'pipe'] },
-  { id: '3', _id: '3', name: 'Electrical & Lighting', slug: 'electrical-lighting', icon: 'Zap', description: 'Cables, modular switches, LED bulbs, circuit breakers', popularKeywords: ['havells', 'wire', 'switch', 'mcb'] },
-  { id: '4', _id: '4', name: 'Groceries & Daily Essentials', slug: 'groceries-daily-essentials', icon: 'ShoppingBag', description: 'Grains, dairy, personal care, packaged goods', popularKeywords: ['atta', 'milk', 'amul', 'oil'] },
-  { id: '5', _id: '5', name: 'Stationery & Office', slug: 'stationery-office', icon: 'BookOpen', description: 'Notebooks, pens, printing paper, calculators', popularKeywords: ['paper', 'pen', 'notebook'] },
+  { id: '3', _id: '3', name: 'Electrical & Lighting', slug: 'electrical-lighting', icon: 'Zap', description: 'Cables, modular switches, LED bulbs, circuit breakers', popularKeywords: ['havells', 'wire', 'switch', 'mcb', 'polycab'] },
+  { id: '4', _id: '4', name: 'Groceries & Daily Essentials', slug: 'groceries-daily-essentials', icon: 'ShoppingBag', description: 'Grains, dairy, personal care, packaged goods', popularKeywords: ['atta', 'milk', 'amul', 'oil', 'salt'] },
+  { id: '5', _id: '5', name: 'Medicines & Wellness', slug: 'medicines-wellness', icon: 'HeartPulse', description: 'OTC medicine, first aid, healthcare devices, pain relief', popularKeywords: ['paracetamol', 'ors', 'bandage', 'thermometer'] },
+  { id: '6', _id: '6', name: 'Electronics & Mobiles', slug: 'electronics-mobiles', icon: 'Smartphone', description: 'Cables, fast chargers, earphones, accessories, appliances', popularKeywords: ['boat', 'charger', 'powerbank', 'earphones'] },
+  { id: '7', _id: '7', name: 'Stationery & Office', slug: 'stationery-office', icon: 'BookOpen', description: 'Notebooks, pens, printing paper, calculators', popularKeywords: ['paper', 'pen', 'notebook'] },
 ];
 
 // @desc    Get categories

@@ -278,7 +278,7 @@ export const AdminDashboardPage = () => {
               Area & State-Wise Sales & Density Visualizer
             </h3>
             <p className="text-xs text-slate-300 max-w-xl">
-              Filter by Delhi, Madhya Pradesh, Uttar Pradesh, Haryana, Maharashtra, and Karnataka. Select any area (Karol Bagh, Sehore, Bhopal, Connaught Place, Lajpat Nagar, Noida) to see active shop locations and live revenue density.
+              Filter by Delhi, Madhya Pradesh, Uttar Pradesh, Haryana, Maharashtra, and Karnataka. Select any area (Karol Bagh, Sehore, Ashta, VIT Bhopal, Bhopal, Connaught Place, Lajpat Nagar, Noida) to see active shop locations and live revenue density.
             </p>
           </div>
 

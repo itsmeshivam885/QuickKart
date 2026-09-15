@@ -90,6 +90,7 @@ export const ShopVerificationPage = () => {
       (s.category && s.category.toLowerCase().includes(q)) ||
       (s.address?.area && s.address.area.toLowerCase().includes(q)) ||
       (s.address?.city && s.address.city.toLowerCase().includes(q)) ||
+      (s.address?.state && s.address.state.toLowerCase().includes(q)) ||
       (s.ownerId?.name && s.ownerId.name.toLowerCase().includes(q)) ||
       (s.ownerName && s.ownerName.toLowerCase().includes(q))
     );
