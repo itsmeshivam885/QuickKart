@@ -431,12 +431,12 @@ export const ShopVerificationPage = () => {
                   <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px]">
                     <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
                       <span className="text-[10px] text-slate-400 block font-bold">Catalog Items</span>
-                      <span className="font-black text-slate-800">{shop.totalProductsCount || 10} Products</span>
+                      <span className="font-black text-slate-800">{shop.totalProductsCount || 0} Products</span>
                     </div>
 
                     <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
                       <span className="text-[10px] text-slate-400 block font-bold">Est. Sales Volume</span>
-                      <span className="font-black text-emerald-600">₹{Number(shop.totalSalesVolume || 180000).toLocaleString('en-IN')}</span>
+                      <span className="font-black text-emerald-600">₹{Number(shop.totalSalesVolume || 0).toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
@@ -757,7 +757,7 @@ export const ShopVerificationPage = () => {
               <div className="flex items-center justify-between text-slate-600">
                 <span className="font-bold">Estimated Sales:</span>
                 <span className="text-emerald-600 font-black text-sm">
-                  ₹{Number(selectedShopForView.totalSalesVolume || 180000).toLocaleString('en-IN')}
+                  ₹{Number(selectedShopForView.totalSalesVolume || 0).toLocaleString('en-IN')}
                 </span>
               </div>
             </div>

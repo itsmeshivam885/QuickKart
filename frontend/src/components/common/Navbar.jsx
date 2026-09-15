@@ -577,7 +577,7 @@ export const Navbar = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="block px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100"
                   >
-                    Users (Customers & Sellers)
+                    Users (Customers & Shopkeepers)
                   </Link>
                   <Link
                     to="/admin/shops"

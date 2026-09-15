@@ -149,7 +149,7 @@ export const AdminDashboardPage = () => {
             <div className="text-[11px] text-slate-500 font-semibold mt-0.5 space-x-1">
               <span className="text-brand-600 font-bold">{stats.users.customers} Customers</span>
               <span>•</span>
-              <span className="text-emerald-600 font-bold">{stats.users.shopkeepers} Sellers</span>
+              <span className="text-emerald-600 font-bold">{stats.users.shopkeepers} Shopkeepers</span>
             </div>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">

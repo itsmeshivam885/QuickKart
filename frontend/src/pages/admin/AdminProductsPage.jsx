@@ -285,7 +285,7 @@ export const AdminProductsPage = () => {
             Registered Products & Inventory
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Track catalog items, store allocations, stock valuations, and inventory health across all sellers.
+            Track catalog items, store allocations, stock valuations, and inventory health across all shopkeepers.
           </p>
         </div>
 
@@ -482,7 +482,7 @@ export const AdminProductsPage = () => {
                 {products.map((p) => {
                   const isLow = p.stockStatus === 'low_stock';
                   const isOut = p.stockStatus === 'out_of_stock';
-                  const shopName = p.shopId?.shopName || 'Marketplace Seller';
+                  const shopName = p.shopId?.shopName || 'Marketplace Store';
                   const city = p.shopId?.address?.city || p.shopId?.address?.area || 'Local';
 
                   return (
