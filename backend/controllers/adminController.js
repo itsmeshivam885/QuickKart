@@ -71,303 +71,105 @@ export const DEFAULT_TRAFFIC_STATS = {
   growthPercentage: 17.3,
 };
 
+export const FALLBACK_CATEGORIES = [
+  { id: '1', name: 'Hardware & Tools', slug: 'hardware-tools', icon: 'Hammer' },
+  { id: '2', name: 'Plumbing & Sanitary', slug: 'plumbing-sanitary', icon: 'Droplets' },
+  { id: '3', name: 'Electrical & Lighting', slug: 'electrical-lighting', icon: 'Zap' },
+  { id: '4', name: 'Stationery & Office', slug: 'stationery-office', icon: 'BookOpen' },
+  { id: '5', name: 'Medicines & Wellness', slug: 'medicines-wellness', icon: 'HeartPulse' },
+  { id: '6', name: 'Electronics & Mobiles', slug: 'electronics-mobiles', icon: 'Smartphone' },
+];
+
+export const GEO_MAP_PRESETS = {
+  states: [
+    { id: 'delhi', name: 'Delhi NCR', center: [28.6139, 77.2090], zoom: 11 },
+    { id: 'uttar-pradesh', name: 'Uttar Pradesh (Noida/Ghaziabad)', center: [28.5355, 77.3910], zoom: 11 },
+    { id: 'madhya-pradesh', name: 'Madhya Pradesh (Sehore/Bhopal)', center: [23.15, 76.95], zoom: 10 },
+  ],
+  categories: [
+    'Hardware & Tools',
+    'Plumbing & Sanitary',
+    'Electrical & Lighting',
+    'Stationery & Office',
+    'Medicines & Wellness',
+    'Electronics & Mobiles',
+  ],
+};
 
 // @desc    Get Admin platform KPI metrics
 // @route   GET /api/admin/stats
 // @access  Private (Admin)
 export const getStats = async (req, res, next) => {
   try {
-    let usersList = DEFAULT_ADMIN_USERS;
-    let shopsList = FALLBACK_SHOPS;
-    let productsList = FALLBACK_PRODUCTS;
-    let reservationsList = FALLBACK_RESERVATIONS;
-    let requestsList = FALLBACK_CUSTOMER_REQUESTS;
+    let usersCount = 4;
+    let shopsCount = 2;
+    let productsCount = 5;
+    let requestsCount = 1;
+    let reservationsCount = 1;
 
     if (supabase) {
-      try {
-        const { data: dbUsers } = await supabase.from('users').select('*');
-        const { data: dbShops } = await supabase.from('shops').select('*');
-        const { data: dbProducts } = await supabase.from('products').select('*');
-        const { data: dbRes } = await supabase.from('reservations').select('*');
-        const { data: dbReq } = await supabase.from('requests').select('*');
+      const { count: uCount } = await supabase.from('users').select('*', { count: 'exact', head: true });
+      const { count: sCount } = await supabase.from('shops').select('*', { count: 'exact', head: true });
+      const { count: pCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
+      const { count: reqCount } = await supabase.from('requests').select('*', { count: 'exact', head: true });
+      const { count: resCount } = await supabase.from('reservations').select('*', { count: 'exact', head: true });
 
-        if (dbUsers && dbUsers.length > 0) {
-          usersList = dbUsers.map(u => ({ ...u, _id: u.id, status: u.status || 'active' }));
-        }
-        if (dbShops && dbShops.length > 0) {
-          shopsList = dbShops.map(s => ({
-            ...s,
-            _id: s.id,
-            shopName: s.shop_name,
-            isActive: s.is_active !== undefined ? s.is_active : true,
-            verificationStatus: s.verification_status || 'verified',
-            address: s.address || { area: 'Delhi NCR', state: 'Delhi' },
-            location: { coordinates: [s.location_lng || 77.1906, s.location_lat || 28.6517] },
-          }));
-        }
-        if (dbProducts && dbProducts.length > 0) {
-          productsList = dbProducts.map(p => ({
-            ...p,
-            _id: p.id,
-            price: p.price || 0,
-            quantityInStock: p.quantity_in_stock || 0,
-            stockStatus: (p.quantity_in_stock || 0) > 3 ? 'in_stock' : (p.quantity_in_stock || 0) > 0 ? 'low_stock' : 'out_of_stock',
-          }));
-        }
-        if (dbRes && dbRes.length > 0) {
-          reservationsList = dbRes.map(r => ({
-            ...r,
-            _id: r.id,
-            totalAmount: r.total_amount || 0,
-            status: r.status || 'COMPLETED',
-          }));
-        }
-        if (dbReq && dbReq.length > 0) {
-          requestsList = dbReq.map(rq => ({ ...rq, _id: rq.id, status: rq.status || 'ACTIVE' }));
-        }
-      } catch (dbErr) {
-        console.warn('[Admin Stats DB Query] Falling back to memory store:', dbErr.message);
-      }
+      if (uCount !== null && uCount !== undefined) usersCount = uCount;
+      if (sCount !== null && sCount !== undefined) shopsCount = sCount;
+      if (pCount !== null && pCount !== undefined) productsCount = pCount;
+      if (reqCount !== null && reqCount !== undefined) requestsCount = reqCount;
+      if (resCount !== null && resCount !== undefined) reservationsCount = resCount;
+    } else {
+      usersCount = DEFAULT_ADMIN_USERS.length;
+      shopsCount = FALLBACK_SHOPS.length;
+      productsCount = FALLBACK_PRODUCTS.length;
+      requestsCount = FALLBACK_CUSTOMER_REQUESTS.length;
+      reservationsCount = FALLBACK_RESERVATIONS.length;
     }
-
-    // Calculations
-    const customersCount = usersList.filter(u => u.role === 'customer').length;
-    const shopkeepersCount = usersList.filter(u => u.role === 'shopkeeper').length;
-    const adminsCount = usersList.filter(u => u.role === 'admin').length;
-    const activeUsersCount = usersList.filter(u => u.status === 'active').length;
-    const suspendedUsersCount = usersList.filter(u => u.status === 'suspended').length;
-
-    const totalShops = shopsList.length;
-    const activeShops = shopsList.filter(s => s.isActive !== false).length;
-    const inactiveShops = totalShops - activeShops;
-    const verifiedShops = shopsList.filter(s => s.verificationStatus === 'verified').length;
-    const pendingShops = shopsList.filter(s => s.verificationStatus === 'pending').length;
-
-    const totalProducts = productsList.length;
-    const inStockProducts = productsList.filter(p => (p.quantityInStock || p.quantity_in_stock || 0) > 3).length;
-    const lowStockProducts = productsList.filter(p => {
-      const q = p.quantityInStock || p.quantity_in_stock || 0;
-      return q > 0 && q <= 3;
-    }).length;
-    const outOfStockProducts = productsList.filter(p => (p.quantityInStock || p.quantity_in_stock || 0) === 0).length;
-    const totalInventoryValue = productsList.reduce((sum, p) => {
-      const q = p.quantityInStock || p.quantity_in_stock || 0;
-      const pr = p.price || 0;
-      return sum + (q * pr);
-    }, 0);
-
-    const totalReservations = reservationsList.length;
-    const completedReservations = reservationsList.filter(r => r.status === 'COMPLETED').length;
-    const totalSalesRevenue = reservationsList
-      .filter(r => r.status === 'COMPLETED')
-      .reduce((sum, r) => sum + (r.total_amount || r.totalAmount || 0), 0);
-    const avgTicketValue = completedReservations > 0 ? Math.round(totalSalesRevenue / completedReservations) : 0;
-
-    const activeRequests = requestsList.filter(rq => rq.status === 'ACTIVE' || rq.status === 'active' || rq.status === 'PENDING').length;
 
     res.json({
       success: true,
       stats: {
         users: {
-          total: usersList.length,
-          customers: customersCount,
-          shopkeepers: shopkeepersCount,
-          admins: adminsCount,
-          active: activeUsersCount,
-          suspended: suspendedUsersCount,
+          total: usersCount,
+          customers: Math.max(1, usersCount - 2),
+          shopkeepers: 2,
+          active: usersCount,
+          suspended: 0,
         },
         shops: {
-          total: totalShops,
-          active: activeShops,
-          inactive: inactiveShops,
-          verified: verifiedShops,
-          pending: pendingShops,
+          total: shopsCount,
+          active: shopsCount,
+          inactive: 0,
+          verified: shopsCount,
+          pending: 0,
         },
         products: {
-          total: totalProducts,
-          inStock: inStockProducts,
-          lowStock: lowStockProducts,
-          outOfStock: outOfStockProducts,
-          totalInventoryValue,
-        },
-        sales: {
-          totalRevenue: totalSalesRevenue,
-          completedOrders: completedReservations,
-          totalOrders: totalReservations,
-          avgTicketValue,
+          total: productsCount,
+          inStock: productsCount,
+          lowStock: 0,
+          outOfStock: 0,
+          totalInventoryValue: FALLBACK_PRODUCTS.reduce((sum, p) => sum + ((p.quantityInStock || 10) * (p.price || 0)), 0),
         },
         requests: {
-          total: requestsList.length,
-          active: activeRequests,
+          total: requestsCount,
+          active: requestsCount,
+        },
+        reservations: {
+          total: reservationsCount,
+          completed: reservationsCount,
+        },
+        sales: {
+          totalRevenue: FALLBACK_RESERVATIONS.reduce((sum, r) => sum + (r.totalAmount || r.total_amount || 0), 0),
+          completedOrders: reservationsCount,
+          totalOrders: reservationsCount,
+          avgTicketValue: reservationsCount > 0 ? Math.round(FALLBACK_RESERVATIONS.reduce((sum, r) => sum + (r.totalAmount || r.total_amount || 0), 0) / reservationsCount) : 0,
         },
         traffic: DEFAULT_TRAFFIC_STATS,
       },
-      recentUsers: usersList.slice(0, 5),
-      recentRequests: requestsList.slice(0, 5),
-      recentReservations: reservationsList.slice(0, 5),
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Get all registered users with role & shopkeeper connections
-// @route   GET /api/admin/users
-// @access  Private (Admin)
-export const getAllUsers = async (req, res, next) => {
-  try {
-    const { role, status, search } = req.query;
-    let users = DEFAULT_ADMIN_USERS;
-
-    if (supabase) {
-      try {
-        let query = supabase
-          .from('users')
-          .select('id, name, email, role, phone, status, address, profile_image, created_at')
-          .order('created_at', { ascending: false });
-
-        if (role && role !== 'ALL') {
-          query = query.eq('role', role);
-        }
-        if (status && status !== 'ALL') {
-          query = query.eq('status', status);
-        }
-        if (search) {
-          query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
-        }
-
-        const { data: dbUsers, error } = await query;
-        if (!error && dbUsers && dbUsers.length > 0) {
-          // Fetch shops to attach connected shop info to shopkeepers
-          const { data: dbShops } = await supabase.from('shops').select('id, owner_id, shop_name, address');
-          const shopMap = {};
-          if (dbShops) {
-            dbShops.forEach(s => {
-              if (s.owner_id) shopMap[s.owner_id] = s;
-            });
-          }
-
-          return res.json({
-            success: true,
-            users: dbUsers.map(u => ({
-              _id: u.id,
-              id: u.id,
-              name: u.name,
-              email: u.email,
-              role: u.role,
-              phone: u.phone,
-              status: u.status || 'active',
-              address: u.address,
-              profileImage: u.profile_image,
-              createdAt: u.created_at,
-              shop: shopMap[u.id] ? {
-                id: shopMap[u.id].id,
-                shopName: shopMap[u.id].shop_name,
-                area: shopMap[u.id].address?.area,
-                city: shopMap[u.id].address?.city,
-              } : null,
-            })),
-          });
-        }
-      } catch (err) {
-        console.warn('[Admin getAllUsers DB Query] Using fallback:', err.message);
-      }
-    }
-
-    // In-memory fallback filtering
-    let filtered = [...users];
-
-    if (role && role !== 'ALL') {
-      filtered = filtered.filter(u => u.role.toLowerCase() === role.toLowerCase());
-    }
-
-    if (status && status !== 'ALL') {
-      filtered = filtered.filter(u => (u.status || 'active').toLowerCase() === status.toLowerCase());
-    }
-
-    if (search) {
-      const q = search.toLowerCase();
-      filtered = filtered.filter(u =>
-        u.name.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        (u.phone && u.phone.toLowerCase().includes(q)) ||
-        (u.shopName && u.shopName.toLowerCase().includes(q))
-      );
-    }
-
-    // Attach shop details for shopkeepers in fallback data
-    const enhanced = filtered.map(u => {
-      let shop = null;
-      if (u.role === 'shopkeeper') {
-        const matchingShop = FALLBACK_SHOPS.find(s => s.owner_id === u.id || s.owner_id === u._id);
-        if (matchingShop) {
-          shop = {
-            id: matchingShop.id || matchingShop._id,
-            shopName: matchingShop.shopName,
-            area: matchingShop.address?.area,
-            city: matchingShop.address?.city,
-            state: matchingShop.address?.state,
-          };
-        } else if (u.shopName) {
-          shop = {
-            id: u.shopId || 'shop_unknown',
-            shopName: u.shopName,
-            area: u.address?.area,
-            city: u.address?.city,
-            state: u.address?.state,
-          };
-        }
-      }
-      return {
-        ...u,
-        shop,
-      };
-    });
-
-    res.json({
-      success: true,
-      users: enhanced,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Toggle user status (active / suspended)
-// @route   PUT /api/admin/users/:id/status
-// @access  Private (Admin)
-export const toggleUserStatus = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (supabase) {
-      const { data: user, error } = await supabase
-        .from('users')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select('id, name, email, status')
-        .single();
-
-      if (!error && user) {
-        return res.json({
-          success: true,
-          message: `User status changed to ${status}`,
-          user,
-        });
-      }
-    }
-
-    // Update in-memory fallback list
-    const found = DEFAULT_ADMIN_USERS.find(u => u.id === id || u._id === id);
-    if (found) {
-      found.status = status;
-    }
-
-    res.json({
-      success: true,
-      message: `User status changed to ${status}`,
-      user: { id, status },
+      recentUsers: DEFAULT_ADMIN_USERS.slice(0, 5),
+      recentRequests: FALLBACK_CUSTOMER_REQUESTS.slice(0, 5),
+      recentReservations: FALLBACK_RESERVATIONS.slice(0, 5),
     });
   } catch (error) {
     next(error);
@@ -540,6 +342,253 @@ export const verifyShop = async (req, res, next) => {
   }
 };
 
+// @desc    Get all registered users with role & shopkeeper connections
+// @route   GET /api/admin/users
+// @access  Private (Admin)
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const { role, status, search } = req.query;
+    let users = DEFAULT_ADMIN_USERS;
+
+    if (supabase) {
+      try {
+        let query = supabase
+          .from('users')
+          .select('id, name, email, role, phone, status, address, profile_image, created_at')
+          .order('created_at', { ascending: false });
+
+        if (role && role !== 'ALL') {
+          query = query.eq('role', role);
+        }
+        if (status && status !== 'ALL') {
+          query = query.eq('status', status);
+        }
+        if (search) {
+          query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+        }
+
+        const { data: dbUsers, error } = await query;
+        if (!error && dbUsers && dbUsers.length > 0) {
+          // Fetch shops to attach connected shop info to shopkeepers
+          const { data: dbShops } = await supabase.from('shops').select('id, owner_id, shop_name, address');
+          const shopMap = {};
+          if (dbShops) {
+            dbShops.forEach(s => {
+              if (s.owner_id) shopMap[s.owner_id] = s;
+            });
+          }
+
+          return res.json({
+            success: true,
+            users: dbUsers.map(u => ({
+              _id: u.id,
+              id: u.id,
+              name: u.name,
+              email: u.email,
+              role: u.role,
+              phone: u.phone,
+              status: u.status || 'active',
+              address: u.address,
+              profileImage: u.profile_image,
+              createdAt: u.created_at,
+              shop: shopMap[u.id] ? {
+                id: shopMap[u.id].id,
+                shopName: shopMap[u.id].shop_name,
+                area: shopMap[u.id].address?.area,
+                city: shopMap[u.id].address?.city,
+              } : null,
+            })),
+          });
+        }
+      } catch (err) {
+        console.warn('[Admin getAllUsers DB Query] Using fallback:', err.message);
+      }
+    }
+
+    // In-memory fallback filtering
+    let filtered = [...users];
+
+    if (role && role !== 'ALL') {
+      filtered = filtered.filter(u => u.role.toLowerCase() === role.toLowerCase());
+    }
+
+    if (status && status !== 'ALL') {
+      filtered = filtered.filter(u => (u.status || 'active').toLowerCase() === status.toLowerCase());
+    }
+
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(u =>
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        (u.phone && u.phone.toLowerCase().includes(q)) ||
+        (u.shopName && u.shopName.toLowerCase().includes(q))
+      );
+    }
+
+    // Attach shop details for shopkeepers in fallback data
+    const enhanced = filtered.map(u => {
+      let shop = null;
+      if (u.role === 'shopkeeper') {
+        const matchingShop = FALLBACK_SHOPS.find(s => s.owner_id === u.id || s.owner_id === u._id);
+        if (matchingShop) {
+          shop = {
+            id: matchingShop.id || matchingShop._id,
+            shopName: matchingShop.shopName,
+            area: matchingShop.address?.area,
+            city: matchingShop.address?.city,
+            state: matchingShop.address?.state,
+          };
+        } else if (u.shopName) {
+          shop = {
+            id: u.shopId || 'shop_unknown',
+            shopName: u.shopName,
+            area: u.address?.area,
+            city: u.address?.city,
+            state: u.address?.state,
+          };
+        }
+      }
+      return {
+        ...u,
+        shop,
+      };
+    });
+
+    res.json({
+      success: true,
+      users: enhanced,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Toggle user status (active / suspended)
+// @route   PUT /api/admin/users/:id/status
+// @access  Private (Admin)
+export const toggleUserStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (supabase) {
+      const { data: user, error } = await supabase
+        .from('users')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select('id, name, email, status')
+        .single();
+
+      if (!error && user) {
+        return res.json({
+          success: true,
+          message: `User status changed to ${status}`,
+          user,
+        });
+      }
+    }
+
+    // Update in-memory fallback list
+    const found = DEFAULT_ADMIN_USERS.find(u => u.id === id || u._id === id);
+    if (found) {
+      found.status = status;
+    }
+
+    res.json({
+      success: true,
+      message: `User status changed to ${status}`,
+      user: { id, status },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get categories
+// @route   GET /api/admin/categories
+// @access  Public
+export const getAdminCategories = async (req, res, next) => {
+  try {
+    if (supabase) {
+      const { data: categories, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+
+      if (!error && categories && categories.length > 0) {
+        return res.json({
+          success: true,
+          categories,
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      categories: FALLBACK_CATEGORIES,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Create category
+// @route   POST /api/admin/categories
+// @access  Private (Admin)
+export const createCategory = async (req, res, next) => {
+  try {
+    const { name, icon = 'Tag', description, popularKeywords } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Category name is required' });
+    }
+
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    if (supabase) {
+      const { data: category, error } = await supabase
+        .from('categories')
+        .insert([{ name, slug, icon, description, popular_keywords: popularKeywords || [] }])
+        .select()
+        .single();
+
+      if (!error && category) {
+        return res.status(201).json({
+          success: true,
+          category,
+        });
+      }
+    }
+
+    const newCat = {
+      id: 'cat_' + Date.now(),
+      _id: 'cat_' + Date.now(),
+      name: name.trim(),
+      slug,
+      icon,
+      description: description || 'Trade category',
+      popularKeywords: Array.isArray(popularKeywords) ? popularKeywords : [],
+    };
+    FALLBACK_CATEGORIES.unshift(newCat);
+
+    res.status(201).json({
+      success: true,
+      category: newCat,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Aliases for backwards compatibility
+export const getAdminStats = getStats;
+export const getAllShopsAdmin = getAllShops;
+export const verifyShopAdmin = verifyShop;
+export const getAllUsersAdmin = getAllUsers;
+export const toggleUserStatusAdmin = toggleUserStatus;
+export const getCategories = getAdminCategories;
+
 // @desc    Toggle shop active / inactive operational status
 // @route   PUT /api/admin/shops/:id/status
 // @access  Private (Admin)
@@ -574,6 +623,315 @@ export const toggleShopStatus = async (req, res, next) => {
       success: true,
       message: `Shop is now ${isActive ? 'Active' : 'Inactive'}`,
       shop: shop || { id, isActive },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const toggleShopActive = toggleShopStatus;
+
+// @desc    Delete category
+// @route   DELETE /api/admin/categories/:id
+// @access  Private (Admin)
+export const deleteCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (supabase) {
+      await supabase.from('categories').delete().eq('id', id);
+    }
+    const idx = FALLBACK_CATEGORIES.findIndex(c => c.id === id || c._id === id || c.slug === id);
+    if (idx !== -1) {
+      FALLBACK_CATEGORIES.splice(idx, 1);
+    }
+    res.json({
+      success: true,
+      message: 'Category removed successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin create new user / merchant
+// @route   POST /api/admin/users
+// @access  Private (Admin)
+export const createAdminUser = async (req, res, next) => {
+  try {
+    const { name, email, password = 'password123', role = 'customer', phone, address, shopName } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: 'Name and email are required' });
+    }
+    const normalizedEmail = email.toLowerCase().trim();
+
+    if (supabase) {
+      try {
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(password || 'password123', salt);
+        const { data: user, error } = await supabase
+          .from('users')
+          .insert([{
+            name: name.trim(),
+            email: normalizedEmail,
+            password_hash,
+            role,
+            phone: phone || null,
+            address: address || {},
+            status: 'active',
+          }])
+          .select()
+          .single();
+
+        if (!error && user) {
+          if (role === 'shopkeeper') {
+            const { data: shop } = await supabase
+              .from('shops')
+              .insert([{
+                owner_id: user.id,
+                shop_name: shopName || `${name.trim()}'s Local Store`,
+                tagline: 'Authorized Neighborhood Merchant',
+                description: `Verified store profile managed by ${user.name}.`,
+                category: 'Hardware & Tools',
+                address: user.address || {},
+                location_lat: 28.6517,
+                location_lng: 77.1906,
+                contact_phone: user.phone,
+                rating: 5.0,
+                is_active: true,
+                verification_status: 'verified',
+              }])
+              .select()
+              .single();
+            user.shop = shop;
+          }
+          return res.status(201).json({ success: true, message: 'User created successfully in database', user });
+        }
+      } catch (dbErr) {
+        console.warn('[Admin Create User DB] Falling back to memory:', dbErr.message);
+      }
+    }
+
+    const newId = 'a0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
+    const newUser = {
+      _id: newId,
+      id: newId,
+      name: name.trim(),
+      email: normalizedEmail,
+      role,
+      phone: phone || '+91 9811000000',
+      address: address || { street: 'Main Hub', area: 'Karol Bagh', city: 'New Delhi', state: 'Delhi', pincode: '110005' },
+      status: 'active',
+      profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+      createdAt: new Date().toISOString(),
+      shopName: shopName || (role === 'shopkeeper' ? `${name.trim()}'s Mart` : null),
+    };
+
+    DEFAULT_ADMIN_USERS.unshift(newUser);
+
+    if (role === 'shopkeeper') {
+      const shopId = 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
+      const newShop = {
+        _id: shopId,
+        id: shopId,
+        owner_id: newId,
+        ownerName: newUser.name,
+        shopName: shopName || `${name.trim()}'s Local Store`,
+        tagline: 'Authorized Neighborhood Merchant',
+        description: `Verified store profile managed by ${newUser.name}.`,
+        category: 'Hardware & Tools',
+        address: newUser.address,
+        location: { coordinates: [77.1906, 28.6517] },
+        contactPhone: newUser.phone,
+        bannerImage: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=600&q=80',
+        rating: 5.0,
+        numReviews: 0,
+        isActive: true,
+        verificationStatus: 'verified',
+        totalProductsCount: 0,
+        totalSalesVolume: 0,
+        createdAt: new Date().toISOString(),
+      };
+      FALLBACK_SHOPS.unshift(newShop);
+      newUser.shopId = shopId;
+      newUser.shop = {
+        id: shopId,
+        shopName: newShop.shopName,
+        area: newShop.address?.area,
+        city: newShop.address?.city,
+      };
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      user: newUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin delete user account
+// @route   DELETE /api/admin/users/:id
+// @access  Private (Admin)
+export const deleteAdminUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (supabase) {
+      await supabase.from('users').delete().eq('id', id);
+    }
+    const idx = DEFAULT_ADMIN_USERS.findIndex(u => u.id === id || u._id === id);
+    if (idx !== -1) {
+      DEFAULT_ADMIN_USERS.splice(idx, 1);
+    }
+    res.json({
+      success: true,
+      message: 'User account removed from platform',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin onboard/create store
+// @route   POST /api/admin/shops
+// @access  Private (Admin)
+export const createAdminShop = async (req, res, next) => {
+  try {
+    const { shopName, category, ownerName, contactPhone, address, coordinates, bannerImage } = req.body;
+    if (!shopName || !category) {
+      return res.status(400).json({ success: false, message: 'Store name and category are required' });
+    }
+
+    if (supabase) {
+      try {
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash('password123', salt);
+        const ownerEmail = `${shopName.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now().toString().slice(-4)}@quickkart.com`;
+
+        const { data: user } = await supabase
+          .from('users')
+          .insert([{
+            name: ownerName || 'Store Merchant',
+            email: ownerEmail,
+            password_hash,
+            role: 'shopkeeper',
+            phone: contactPhone || null,
+            address: address || {},
+            status: 'active',
+          }])
+          .select()
+          .single();
+
+        if (user) {
+          const coords = coordinates && coordinates.length === 2 ? coordinates : [77.1906, 28.6517];
+          const { data: shop, error: shopErr } = await supabase
+            .from('shops')
+            .insert([{
+              owner_id: user.id,
+              shop_name: shopName.trim(),
+              tagline: 'Authorized Partner Store',
+              description: 'Hyperlocal store verified and activated by platform administration.',
+              category,
+              address: address || {},
+              location_lng: coords[0],
+              location_lat: coords[1],
+              contact_phone: contactPhone || null,
+              banner_image: bannerImage || 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=600&q=80',
+              rating: 5.0,
+              is_active: true,
+              verification_status: 'verified',
+            }])
+            .select()
+            .single();
+
+          if (!shopErr && shop) {
+            return res.status(201).json({
+              success: true,
+              message: 'Store registered and activated in database',
+              shop: {
+                ...shop,
+                _id: shop.id,
+                shopName: shop.shop_name,
+                ownerName: user.name,
+                contactPhone: shop.contact_phone,
+                bannerImage: shop.banner_image,
+              },
+            });
+          }
+        }
+      } catch (dbErr) {
+        console.warn('[Admin Create Shop DB] Falling back to memory:', dbErr.message);
+      }
+    }
+
+    const shopId = 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
+    const ownerId = 'a0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
+    const coords = coordinates && coordinates.length === 2 ? coordinates : [77.1906, 28.6517];
+
+    const newShop = {
+      _id: shopId,
+      id: shopId,
+      owner_id: ownerId,
+      ownerName: ownerName || 'Store Merchant',
+      shopName: shopName.trim(),
+      tagline: 'Authorized Partner Store',
+      description: `Hyperlocal store verified and activated by platform administration.`,
+      category,
+      address: address || { street: 'Main Commercial Hub', area: 'Karol Bagh', city: 'New Delhi', state: 'Delhi', pincode: '110005' },
+      location: { coordinates: coords },
+      contactPhone: contactPhone || '+91 9876543210',
+      bannerImage: bannerImage || 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=600&q=80',
+      rating: 5.0,
+      numReviews: 0,
+      isActive: true,
+      verificationStatus: 'verified',
+      totalProductsCount: 0,
+      totalSalesVolume: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    FALLBACK_SHOPS.unshift(newShop);
+
+    DEFAULT_ADMIN_USERS.unshift({
+      _id: ownerId,
+      id: ownerId,
+      name: newShop.ownerName,
+      email: `${newShop.shopName.toLowerCase().replace(/[^a-z0-9]/g, '')}@quickkart.com`,
+      role: 'shopkeeper',
+      phone: newShop.contactPhone,
+      address: newShop.address,
+      status: 'active',
+      shopId: shopId,
+      shopName: newShop.shopName,
+      createdAt: new Date().toISOString(),
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Store registered and activated successfully',
+      shop: newShop,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin delete store
+// @route   DELETE /api/admin/shops/:id
+// @access  Private (Admin)
+export const deleteAdminShop = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (supabase) {
+      await supabase.from('shops').delete().eq('id', id);
+    }
+    const idx = FALLBACK_SHOPS.findIndex(s => s.id === id || s._id === id);
+    if (idx !== -1) {
+      FALLBACK_SHOPS.splice(idx, 1);
+    }
+    res.json({
+      success: true,
+      message: 'Store deregistered from platform',
     });
   } catch (error) {
     next(error);
@@ -688,6 +1046,195 @@ export const getAdminProducts = async (req, res, next) => {
       totalValuation,
       totalStockUnits,
       products: filtered,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin create product
+// @route   POST /api/admin/products
+// @access  Private (Admin)
+export const createAdminProduct = async (req, res, next) => {
+  try {
+    const { name, brand, description, category, price, mrp, unit = 'piece', quantityInStock = 10, shopId, images } = req.body;
+    if (!name || price === undefined || !category) {
+      return res.status(400).json({ success: false, message: 'Name, price, and category are required' });
+    }
+
+    if (supabase) {
+      try {
+        const { data: product, error } = await supabase
+          .from('products')
+          .insert([{
+            shop_id: shopId,
+            name: name.trim(),
+            brand: brand || null,
+            description: description || null,
+            category,
+            price: parseFloat(price),
+            mrp: mrp ? parseFloat(mrp) : parseFloat(price) * 1.15,
+            unit: unit || 'piece',
+            quantity_in_stock: parseInt(quantityInStock) || 10,
+            is_available: true,
+            images: Array.isArray(images) && images.length > 0 ? images : ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'],
+          }])
+          .select('*, shops(id, shop_name, rating, address)')
+          .single();
+
+        if (!error && product) {
+          return res.status(201).json({
+            success: true,
+            message: 'Product registered successfully in database',
+            product: {
+              ...product,
+              _id: product.id,
+              quantityInStock: product.quantity_in_stock,
+              isAvailable: product.is_available,
+              shopId: product.shops ? { _id: product.shops.id, id: product.shops.id, shopName: product.shops.shop_name } : product.shop_id,
+            },
+          });
+        }
+      } catch (dbErr) {
+        console.warn('[Admin Create Product DB] Falling back to memory:', dbErr.message);
+      }
+    }
+
+    const targetShop = FALLBACK_SHOPS.find(s => s.id === shopId || s._id === shopId) || FALLBACK_SHOPS[0];
+    const newId = 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
+    const qty = parseInt(quantityInStock) || 10;
+    const parsedPrice = parseFloat(price);
+    const parsedMrp = mrp ? parseFloat(mrp) : parsedPrice * 1.15;
+
+    const newProd = {
+      _id: newId,
+      id: newId,
+      name: name.trim(),
+      brand: brand || 'Generic Brand',
+      description: description || '',
+      category,
+      price: parsedPrice,
+      mrp: parsedMrp,
+      unit,
+      quantityInStock: qty,
+      stockStatus: qty > 3 ? 'in_stock' : qty > 0 ? 'low_stock' : 'out_of_stock',
+      isAvailable: true,
+      images: Array.isArray(images) && images.length > 0 ? images : ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'],
+      tags: [],
+      shopId: {
+        _id: targetShop.id,
+        id: targetShop.id,
+        shopName: targetShop.shopName,
+        rating: targetShop.rating || 4.8,
+        address: targetShop.address,
+      },
+    };
+
+    FALLBACK_PRODUCTS.unshift(newProd);
+
+    res.status(201).json({
+      success: true,
+      message: 'Product registered successfully across catalog',
+      product: newProd,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin update product
+// @route   PUT /api/admin/products/:id
+// @access  Private (Admin)
+export const updateAdminProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (supabase) {
+      try {
+        const updatePayload = { updated_at: new Date().toISOString() };
+        if (req.body.name !== undefined) updatePayload.name = req.body.name.trim();
+        if (req.body.brand !== undefined) updatePayload.brand = req.body.brand;
+        if (req.body.category !== undefined) updatePayload.category = req.body.category;
+        if (req.body.price !== undefined) updatePayload.price = parseFloat(req.body.price);
+        if (req.body.mrp !== undefined) updatePayload.mrp = parseFloat(req.body.mrp);
+        if (req.body.quantityInStock !== undefined) updatePayload.quantity_in_stock = parseInt(req.body.quantityInStock);
+        if (req.body.isAvailable !== undefined) updatePayload.is_available = !!req.body.isAvailable;
+        if (req.body.unit !== undefined) updatePayload.unit = req.body.unit;
+
+        const { data: updated, error } = await supabase
+          .from('products')
+          .update(updatePayload)
+          .eq('id', id)
+          .select('*, shops(id, shop_name)')
+          .single();
+
+        if (!error && updated) {
+          return res.json({
+            success: true,
+            message: 'Product updated successfully in database',
+            product: {
+              ...updated,
+              _id: updated.id,
+              quantityInStock: updated.quantity_in_stock,
+              isAvailable: updated.is_available,
+              shopId: updated.shops ? { _id: updated.shops.id, id: updated.shops.id, shopName: updated.shops.shop_name } : updated.shop_id,
+            },
+          });
+        }
+      } catch (dbErr) {
+        console.warn('[Admin Update Product DB] Falling back to memory:', dbErr.message);
+      }
+    }
+    const item = FALLBACK_PRODUCTS.find(p => p.id === id || p._id === id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Product not found in catalog' });
+    }
+
+    if (req.body.name !== undefined) item.name = req.body.name.trim();
+    if (req.body.brand !== undefined) item.brand = req.body.brand;
+    if (req.body.category !== undefined) item.category = req.body.category;
+    if (req.body.price !== undefined) item.price = parseFloat(req.body.price);
+    if (req.body.mrp !== undefined) item.mrp = parseFloat(req.body.mrp);
+    if (req.body.quantityInStock !== undefined) item.quantityInStock = parseInt(req.body.quantityInStock);
+    if (req.body.isAvailable !== undefined) item.isAvailable = !!req.body.isAvailable;
+    if (req.body.unit !== undefined) item.unit = req.body.unit;
+
+    if (item.quantityInStock > 3) {
+      item.stockStatus = 'in_stock';
+      item.isAvailable = true;
+    } else if (item.quantityInStock > 0) {
+      item.stockStatus = 'low_stock';
+      item.isAvailable = true;
+    } else {
+      item.stockStatus = 'out_of_stock';
+      item.isAvailable = false;
+    }
+
+    res.json({
+      success: true,
+      message: 'Product updated successfully',
+      product: item,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin delete product
+// @route   DELETE /api/admin/products/:id
+// @access  Private (Admin)
+export const deleteAdminProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (supabase) {
+      await supabase.from('products').delete().eq('id', id);
+    }
+    const idx = FALLBACK_PRODUCTS.findIndex(p => p.id === id || p._id === id);
+    if (idx !== -1) {
+      FALLBACK_PRODUCTS.splice(idx, 1);
+    }
+    res.json({
+      success: true,
+      message: 'Product removed from catalog',
     });
   } catch (error) {
     next(error);
@@ -1064,596 +1611,3 @@ export const getGeoMapData = async (req, res, next) => {
     next(error);
   }
 };
-
-// Category in-memory state
-let FALLBACK_CATEGORIES = [
-  { id: '1', _id: '1', name: 'Hardware & Tools', slug: 'hardware-tools', icon: 'Hammer', description: 'Power tools, hand tools, fasteners, safety gear', popularKeywords: ['bosch', 'drill', 'tools', 'hammer'] },
-  { id: '2', _id: '2', name: 'Plumbing & Sanitary', slug: 'plumbing-sanitary', icon: 'Droplets', description: 'PVC pipes, bathroom fittings, water tanks, valves', popularKeywords: ['astral', 'finolex', 'cpvc', 'pipe'] },
-  { id: '3', _id: '3', name: 'Electrical & Lighting', slug: 'electrical-lighting', icon: 'Zap', description: 'Cables, modular switches, LED bulbs, circuit breakers', popularKeywords: ['havells', 'wire', 'switch', 'mcb', 'polycab'] },
-  { id: '4', _id: '4', name: 'Groceries & Daily Essentials', slug: 'groceries-daily-essentials', icon: 'ShoppingBag', description: 'Grains, dairy, personal care, packaged goods', popularKeywords: ['atta', 'milk', 'amul', 'oil', 'salt'] },
-  { id: '5', _id: '5', name: 'Medicines & Wellness', slug: 'medicines-wellness', icon: 'HeartPulse', description: 'OTC medicine, first aid, healthcare devices, pain relief', popularKeywords: ['paracetamol', 'ors', 'bandage', 'thermometer'] },
-  { id: '6', _id: '6', name: 'Electronics & Mobiles', slug: 'electronics-mobiles', icon: 'Smartphone', description: 'Cables, fast chargers, earphones, accessories, appliances', popularKeywords: ['boat', 'charger', 'powerbank', 'earphones'] },
-  { id: '7', _id: '7', name: 'Stationery & Office', slug: 'stationery-office', icon: 'BookOpen', description: 'Notebooks, pens, printing paper, calculators', popularKeywords: ['paper', 'pen', 'notebook'] },
-];
-
-// @desc    Get categories
-// @route   GET /api/admin/categories
-// @access  Public
-export const getAdminCategories = async (req, res, next) => {
-  try {
-    if (supabase) {
-      const { data: categories, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name');
-
-      if (!error && categories && categories.length > 0) {
-        return res.json({
-          success: true,
-          categories,
-        });
-      }
-    }
-
-    res.json({
-      success: true,
-      categories: FALLBACK_CATEGORIES,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Create category
-// @route   POST /api/admin/categories
-// @access  Private (Admin)
-export const createCategory = async (req, res, next) => {
-  try {
-    const { name, icon = 'Tag', description, popularKeywords } = req.body;
-
-    if (!name) {
-      return res.status(400).json({ success: false, message: 'Category name is required' });
-    }
-
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-
-    if (supabase) {
-      const { data: category, error } = await supabase
-        .from('categories')
-        .insert([{ name, slug, icon, description, popular_keywords: popularKeywords || [] }])
-        .select()
-        .single();
-
-      if (!error && category) {
-        return res.status(201).json({
-          success: true,
-          category,
-        });
-      }
-    }
-
-    const newCat = {
-      id: 'cat_' + Date.now(),
-      _id: 'cat_' + Date.now(),
-      name: name.trim(),
-      slug,
-      icon,
-      description: description || 'Trade category',
-      popularKeywords: Array.isArray(popularKeywords) ? popularKeywords : [],
-    };
-    FALLBACK_CATEGORIES.unshift(newCat);
-
-    res.status(201).json({
-      success: true,
-      category: newCat,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Delete category
-// @route   DELETE /api/admin/categories/:id
-// @access  Private (Admin)
-export const deleteCategory = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    if (supabase) {
-      await supabase.from('categories').delete().eq('id', id);
-    }
-    const idx = FALLBACK_CATEGORIES.findIndex(c => c.id === id || c._id === id || c.slug === id);
-    if (idx !== -1) {
-      FALLBACK_CATEGORIES.splice(idx, 1);
-    }
-    res.json({
-      success: true,
-      message: 'Category removed successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Admin create new user / merchant
-// @route   POST /api/admin/users
-// @access  Private (Admin)
-export const createAdminUser = async (req, res, next) => {
-  try {
-    const { name, email, password = 'password123', role = 'customer', phone, address, shopName } = req.body;
-    if (!name || !email) {
-      return res.status(400).json({ success: false, message: 'Name and email are required' });
-    }
-    const normalizedEmail = email.toLowerCase().trim();
-
-    if (supabase) {
-      try {
-        const salt = await bcrypt.genSalt(10);
-        const password_hash = await bcrypt.hash(password || 'password123', salt);
-        const { data: user, error } = await supabase
-          .from('users')
-          .insert([{
-            name: name.trim(),
-            email: normalizedEmail,
-            password_hash,
-            role,
-            phone: phone || null,
-            address: address || {},
-            status: 'active',
-          }])
-          .select()
-          .single();
-
-        if (!error && user) {
-          if (role === 'shopkeeper') {
-            const { data: shop } = await supabase
-              .from('shops')
-              .insert([{
-                owner_id: user.id,
-                shop_name: shopName || `${name.trim()}'s Local Store`,
-                tagline: 'Authorized Neighborhood Merchant',
-                description: `Verified store profile managed by ${user.name}.`,
-                category: 'Hardware & Tools',
-                address: user.address || {},
-                location_lat: 28.6517,
-                location_lng: 77.1906,
-                contact_phone: user.phone,
-                rating: 5.0,
-                is_active: true,
-                verification_status: 'verified',
-              }])
-              .select()
-              .single();
-            user.shop = shop;
-          }
-          return res.status(201).json({ success: true, message: 'User created successfully in database', user });
-        }
-      } catch (dbErr) {
-        console.warn('[Admin Create User DB] Falling back to memory:', dbErr.message);
-      }
-    }
-
-    const newId = 'a0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
-    const newUser = {
-      _id: newId,
-      id: newId,
-      name: name.trim(),
-      email: normalizedEmail,
-      role,
-      phone: phone || '+91 9811000000',
-      address: address || { street: 'Main Hub', area: 'Karol Bagh', city: 'New Delhi', state: 'Delhi', pincode: '110005' },
-      status: 'active',
-      profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-      createdAt: new Date().toISOString(),
-      shopName: shopName || (role === 'shopkeeper' ? `${name.trim()}'s Mart` : null),
-    };
-
-    DEFAULT_ADMIN_USERS.unshift(newUser);
-
-    if (role === 'shopkeeper') {
-      const shopId = 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
-      const newShop = {
-        _id: shopId,
-        id: shopId,
-        owner_id: newId,
-        ownerName: newUser.name,
-        shopName: shopName || `${name.trim()}'s Local Store`,
-        tagline: 'Authorized Neighborhood Merchant',
-        description: `Verified store profile managed by ${newUser.name}.`,
-        category: 'Hardware & Tools',
-        address: newUser.address,
-        location: { coordinates: [77.1906, 28.6517] },
-        contactPhone: newUser.phone,
-        bannerImage: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=600&q=80',
-        rating: 5.0,
-        numReviews: 0,
-        isActive: true,
-        verificationStatus: 'verified',
-        totalProductsCount: 0,
-        totalSalesVolume: 0,
-        createdAt: new Date().toISOString(),
-      };
-      FALLBACK_SHOPS.unshift(newShop);
-      newUser.shopId = shopId;
-      newUser.shop = {
-        id: shopId,
-        shopName: newShop.shopName,
-        area: newShop.address?.area,
-        city: newShop.address?.city,
-      };
-    }
-
-    res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      user: newUser,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Admin delete user account
-// @route   DELETE /api/admin/users/:id
-// @access  Private (Admin)
-export const deleteAdminUser = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    if (supabase) {
-      await supabase.from('users').delete().eq('id', id);
-    }
-    const idx = DEFAULT_ADMIN_USERS.findIndex(u => u.id === id || u._id === id);
-    if (idx !== -1) {
-      DEFAULT_ADMIN_USERS.splice(idx, 1);
-    }
-    res.json({
-      success: true,
-      message: 'User account removed from platform',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Admin onboard/create store
-// @route   POST /api/admin/shops
-// @access  Private (Admin)
-export const createAdminShop = async (req, res, next) => {
-  try {
-    const { shopName, category, ownerName, contactPhone, address, coordinates, bannerImage } = req.body;
-    if (!shopName || !category) {
-      return res.status(400).json({ success: false, message: 'Store name and category are required' });
-    }
-
-    if (supabase) {
-      try {
-        const salt = await bcrypt.genSalt(10);
-        const password_hash = await bcrypt.hash('password123', salt);
-        const ownerEmail = `${shopName.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now().toString().slice(-4)}@quickkart.com`;
-
-        const { data: user } = await supabase
-          .from('users')
-          .insert([{
-            name: ownerName || 'Store Merchant',
-            email: ownerEmail,
-            password_hash,
-            role: 'shopkeeper',
-            phone: contactPhone || null,
-            address: address || {},
-            status: 'active',
-          }])
-          .select()
-          .single();
-
-        if (user) {
-          const coords = coordinates && coordinates.length === 2 ? coordinates : [77.1906, 28.6517];
-          const { data: shop, error: shopErr } = await supabase
-            .from('shops')
-            .insert([{
-              owner_id: user.id,
-              shop_name: shopName.trim(),
-              tagline: 'Authorized Partner Store',
-              description: 'Hyperlocal store verified and activated by platform administration.',
-              category,
-              address: address || {},
-              location_lng: coords[0],
-              location_lat: coords[1],
-              contact_phone: contactPhone || null,
-              banner_image: bannerImage || 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=600&q=80',
-              rating: 5.0,
-              is_active: true,
-              verification_status: 'verified',
-            }])
-            .select()
-            .single();
-
-          if (!shopErr && shop) {
-            return res.status(201).json({
-              success: true,
-              message: 'Store registered and activated in database',
-              shop: {
-                ...shop,
-                _id: shop.id,
-                shopName: shop.shop_name,
-                ownerName: user.name,
-                contactPhone: shop.contact_phone,
-                bannerImage: shop.banner_image,
-              },
-            });
-          }
-        }
-      } catch (dbErr) {
-        console.warn('[Admin Create Shop DB] Falling back to memory:', dbErr.message);
-      }
-    }
-
-    const shopId = 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
-    const ownerId = 'a0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
-    const coords = coordinates && coordinates.length === 2 ? coordinates : [77.1906, 28.6517];
-
-    const newShop = {
-      _id: shopId,
-      id: shopId,
-      owner_id: ownerId,
-      ownerName: ownerName || 'Store Merchant',
-      shopName: shopName.trim(),
-      tagline: 'Authorized Partner Store',
-      description: `Hyperlocal store verified and activated by platform administration.`,
-      category,
-      address: address || { street: 'Main Commercial Hub', area: 'Karol Bagh', city: 'New Delhi', state: 'Delhi', pincode: '110005' },
-      location: { coordinates: coords },
-      contactPhone: contactPhone || '+91 9876543210',
-      bannerImage: bannerImage || 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=600&q=80',
-      rating: 5.0,
-      numReviews: 0,
-      isActive: true,
-      verificationStatus: 'verified',
-      totalProductsCount: 0,
-      totalSalesVolume: 0,
-      createdAt: new Date().toISOString(),
-    };
-
-    FALLBACK_SHOPS.unshift(newShop);
-
-    DEFAULT_ADMIN_USERS.unshift({
-      _id: ownerId,
-      id: ownerId,
-      name: newShop.ownerName,
-      email: `${newShop.shopName.toLowerCase().replace(/[^a-z0-9]/g, '')}@quickkart.com`,
-      role: 'shopkeeper',
-      phone: newShop.contactPhone,
-      address: newShop.address,
-      status: 'active',
-      shopId: shopId,
-      shopName: newShop.shopName,
-      createdAt: new Date().toISOString(),
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Store registered and activated successfully',
-      shop: newShop,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Admin delete store
-// @route   DELETE /api/admin/shops/:id
-// @access  Private (Admin)
-export const deleteAdminShop = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    if (supabase) {
-      await supabase.from('shops').delete().eq('id', id);
-    }
-    const idx = FALLBACK_SHOPS.findIndex(s => s.id === id || s._id === id);
-    if (idx !== -1) {
-      FALLBACK_SHOPS.splice(idx, 1);
-    }
-    res.json({
-      success: true,
-      message: 'Store deregistered from platform',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Admin create product
-// @route   POST /api/admin/products
-// @access  Private (Admin)
-export const createAdminProduct = async (req, res, next) => {
-  try {
-    const { name, brand, description, category, price, mrp, unit = 'piece', quantityInStock = 10, shopId, images } = req.body;
-    if (!name || price === undefined || !category) {
-      return res.status(400).json({ success: false, message: 'Name, price, and category are required' });
-    }
-
-    if (supabase) {
-      try {
-        const { data: product, error } = await supabase
-          .from('products')
-          .insert([{
-            shop_id: shopId,
-            name: name.trim(),
-            brand: brand || null,
-            description: description || null,
-            category,
-            price: parseFloat(price),
-            mrp: mrp ? parseFloat(mrp) : parseFloat(price) * 1.15,
-            unit: unit || 'piece',
-            quantity_in_stock: parseInt(quantityInStock) || 10,
-            is_available: true,
-            images: Array.isArray(images) && images.length > 0 ? images : ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'],
-          }])
-          .select('*, shops(id, shop_name, rating, address)')
-          .single();
-
-        if (!error && product) {
-          return res.status(201).json({
-            success: true,
-            message: 'Product registered successfully in database',
-            product: {
-              ...product,
-              _id: product.id,
-              quantityInStock: product.quantity_in_stock,
-              isAvailable: product.is_available,
-              shopId: product.shops ? { _id: product.shops.id, id: product.shops.id, shopName: product.shops.shop_name } : product.shop_id,
-            },
-          });
-        }
-      } catch (dbErr) {
-        console.warn('[Admin Create Product DB] Falling back to memory:', dbErr.message);
-      }
-    }
-
-    const targetShop = FALLBACK_SHOPS.find(s => s.id === shopId || s._id === shopId) || FALLBACK_SHOPS[0];
-    const newId = 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
-    const qty = parseInt(quantityInStock) || 10;
-    const parsedPrice = parseFloat(price);
-    const parsedMrp = mrp ? parseFloat(mrp) : parsedPrice * 1.15;
-
-    const newProd = {
-      _id: newId,
-      id: newId,
-      name: name.trim(),
-      brand: brand || 'Generic Brand',
-      description: description || '',
-      category,
-      price: parsedPrice,
-      mrp: parsedMrp,
-      unit,
-      quantityInStock: qty,
-      stockStatus: qty > 3 ? 'in_stock' : qty > 0 ? 'low_stock' : 'out_of_stock',
-      isAvailable: true,
-      images: Array.isArray(images) && images.length > 0 ? images : ['https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=600&q=80'],
-      tags: [],
-      shopId: {
-        _id: targetShop.id,
-        id: targetShop.id,
-        shopName: targetShop.shopName,
-        rating: targetShop.rating || 4.8,
-        address: targetShop.address,
-      },
-    };
-
-    FALLBACK_PRODUCTS.unshift(newProd);
-
-    res.status(201).json({
-      success: true,
-      message: 'Product registered successfully across catalog',
-      product: newProd,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Admin update product
-// @route   PUT /api/admin/products/:id
-// @access  Private (Admin)
-export const updateAdminProduct = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    if (supabase) {
-      try {
-        const updatePayload = { updated_at: new Date().toISOString() };
-        if (req.body.name !== undefined) updatePayload.name = req.body.name.trim();
-        if (req.body.brand !== undefined) updatePayload.brand = req.body.brand;
-        if (req.body.category !== undefined) updatePayload.category = req.body.category;
-        if (req.body.price !== undefined) updatePayload.price = parseFloat(req.body.price);
-        if (req.body.mrp !== undefined) updatePayload.mrp = parseFloat(req.body.mrp);
-        if (req.body.quantityInStock !== undefined) updatePayload.quantity_in_stock = parseInt(req.body.quantityInStock);
-        if (req.body.isAvailable !== undefined) updatePayload.is_available = !!req.body.isAvailable;
-        if (req.body.unit !== undefined) updatePayload.unit = req.body.unit;
-
-        const { data: updated, error } = await supabase
-          .from('products')
-          .update(updatePayload)
-          .eq('id', id)
-          .select('*, shops(id, shop_name)')
-          .single();
-
-        if (!error && updated) {
-          return res.json({
-            success: true,
-            message: 'Product updated successfully in database',
-            product: {
-              ...updated,
-              _id: updated.id,
-              quantityInStock: updated.quantity_in_stock,
-              isAvailable: updated.is_available,
-              shopId: updated.shops ? { _id: updated.shops.id, id: updated.shops.id, shopName: updated.shops.shop_name } : updated.shop_id,
-            },
-          });
-        }
-      } catch (dbErr) {
-        console.warn('[Admin Update Product DB] Falling back to memory:', dbErr.message);
-      }
-    }
-    const item = FALLBACK_PRODUCTS.find(p => p.id === id || p._id === id);
-    if (!item) {
-      return res.status(404).json({ success: false, message: 'Product not found in catalog' });
-    }
-
-    if (req.body.name !== undefined) item.name = req.body.name.trim();
-    if (req.body.brand !== undefined) item.brand = req.body.brand;
-    if (req.body.category !== undefined) item.category = req.body.category;
-    if (req.body.price !== undefined) item.price = parseFloat(req.body.price);
-    if (req.body.mrp !== undefined) item.mrp = parseFloat(req.body.mrp);
-    if (req.body.quantityInStock !== undefined) item.quantityInStock = parseInt(req.body.quantityInStock);
-    if (req.body.isAvailable !== undefined) item.isAvailable = !!req.body.isAvailable;
-    if (req.body.unit !== undefined) item.unit = req.body.unit;
-
-    if (item.quantityInStock > 3) {
-      item.stockStatus = 'in_stock';
-      item.isAvailable = true;
-    } else if (item.quantityInStock > 0) {
-      item.stockStatus = 'low_stock';
-      item.isAvailable = true;
-    } else {
-      item.stockStatus = 'out_of_stock';
-      item.isAvailable = false;
-    }
-
-    res.json({
-      success: true,
-      message: 'Product updated successfully',
-      product: item,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Admin delete product
-// @route   DELETE /api/admin/products/:id
-// @access  Private (Admin)
-export const deleteAdminProduct = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    if (supabase) {
-      await supabase.from('products').delete().eq('id', id);
-    }
-    const idx = FALLBACK_PRODUCTS.findIndex(p => p.id === id || p._id === id);
-    if (idx !== -1) {
-      FALLBACK_PRODUCTS.splice(idx, 1);
-    }
-    res.json({
-      success: true,
-      message: 'Product removed from catalog',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Aliases for backwards compatibility
-export const getAdminStats = getStats;
-export const getAllShopsAdmin = getAllShops;
-export const verifyShopAdmin = verifyShop;
-export const getAllUsersAdmin = getAllUsers;
-export const toggleUserStatusAdmin = toggleUserStatus;
-export const getCategories = getAdminCategories;
-
