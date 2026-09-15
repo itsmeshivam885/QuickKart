@@ -882,6 +882,7 @@ export const getGeoMapData = async (req, res, next) => {
     // States list with default center lat/lng
     const states = [
       { id: 'delhi', name: 'Delhi', center: [28.6139, 77.2090], zoom: 12 },
+      { id: 'madhya-pradesh', name: 'Madhya Pradesh', center: [23.2599, 77.4126], zoom: 11 },
       { id: 'uttar-pradesh', name: 'Uttar Pradesh', center: [28.6256, 77.3639], zoom: 12 },
       { id: 'haryana', name: 'Haryana', center: [28.4950, 77.0888], zoom: 13 },
       { id: 'maharashtra', name: 'Maharashtra', center: [19.0596, 72.8335], zoom: 12 },
@@ -913,6 +914,22 @@ export const getGeoMapData = async (req, res, next) => {
         center: [28.5700, 77.2433],
         zoom: 14,
         description: 'Dense South Delhi market specializing in plumbing supplies, pipes, and electricals.',
+      },
+      {
+        id: 'sehore',
+        name: 'Sehore',
+        state: 'Madhya Pradesh',
+        center: [23.2043, 77.0844],
+        zoom: 14,
+        description: 'Station Road, Mandi & Main Market regional trade hub for hardware, tools, sanitary, and agricultural essentials.',
+      },
+      {
+        id: 'bhopal',
+        name: 'Bhopal',
+        state: 'Madhya Pradesh',
+        center: [23.2599, 77.4126],
+        zoom: 13,
+        description: 'Commercial capital corridor covering MP Nagar Zone-1 and New Market trade zones.',
       },
       {
         id: 'noida',
