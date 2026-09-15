@@ -76,12 +76,12 @@ export const createReservation = async (req, res, next) => {
           expiresAt: reservation.expires_at,
           shopId: reservation.shops
             ? {
-                _id: reservation.shops.id,
-                id: reservation.shops.id,
-                shopName: reservation.shops.shop_name,
-                contactPhone: reservation.shops.contact_phone,
-                address: reservation.shops.address,
-              }
+              _id: reservation.shops.id,
+              id: reservation.shops.id,
+              shopName: reservation.shops.shop_name,
+              contactPhone: reservation.shops.contact_phone,
+              address: reservation.shops.address,
+            }
             : null,
         },
       });
@@ -166,12 +166,12 @@ export const getCustomerReservations = async (req, res, next) => {
           createdAt: r.created_at,
           shopId: r.shops
             ? {
-                _id: r.shops.id,
-                id: r.shops.id,
-                shopName: r.shops.shop_name,
-                contactPhone: r.shops.contact_phone,
-                address: r.shops.address,
-              }
+              _id: r.shops.id,
+              id: r.shops.id,
+              shopName: r.shops.shop_name,
+              contactPhone: r.shops.contact_phone,
+              address: r.shops.address,
+            }
             : null,
         }));
 
@@ -291,12 +291,12 @@ export const updateReservationStatus = async (req, res, next) => {
           expiresAt: updated.expires_at,
           shopId: updated.shops
             ? {
-                _id: updated.shops.id,
-                id: updated.shops.id,
-                shopName: updated.shops.shop_name,
-                contactPhone: updated.shops.contact_phone,
-                address: updated.shops.address,
-              }
+              _id: updated.shops.id,
+              id: updated.shops.id,
+              shopName: updated.shops.shop_name,
+              contactPhone: updated.shops.contact_phone,
+              address: updated.shops.address,
+            }
             : null,
         },
       });

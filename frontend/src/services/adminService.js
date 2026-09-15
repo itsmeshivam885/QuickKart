@@ -31,6 +31,11 @@ export const adminService = {
     return res.data;
   },
 
+  toggleShopActive: async (id, isActive) => {
+    const res = await api.put(`/admin/shops/${id}/status`, { isActive });
+    return res.data;
+  },
+
   getAdminProducts: async (params = {}) => {
     const res = await api.get('/admin/products', { params });
     return res.data;

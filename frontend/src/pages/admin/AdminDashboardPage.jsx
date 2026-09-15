@@ -26,16 +26,21 @@ import {
 export const AdminDashboardPage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchStats = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await adminService.getStats();
       if (res.success) {
         setData(res);
+      } else {
+        setError(res.message || 'Failed to load platform analytics');
       }
     } catch (err) {
       console.error('Error fetching admin stats:', err);
+      setError(err?.response?.data?.message || err.message || 'Error connecting to admin API');
     } finally {
       setLoading(false);
     }
@@ -45,11 +50,29 @@ export const AdminDashboardPage = () => {
     fetchStats();
   }, []);
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <div className="text-center py-24 space-y-2">
         <RefreshCw className="w-7 h-7 text-brand-600 animate-spin mx-auto" />
         <p className="text-xs text-slate-500 font-semibold">Loading platform analytics & operations...</p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-6 bg-white rounded-2xl shadow-sm border border-slate-200 text-center space-y-4">
+        <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+          <AlertTriangle className="w-6 h-6" />
+        </div>
+        <h3 className="font-bold text-slate-800">Admin Dashboard Unavailable</h3>
+        <p className="text-xs text-slate-500">{error || 'Could not load data. Ensure backend is running and you are logged in as admin.'}</p>
+        <button
+          onClick={fetchStats}
+          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all"
+        >
+          Retry Connection
+        </button>
       </div>
     );
   }

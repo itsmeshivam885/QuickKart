@@ -62,7 +62,7 @@ export const AdminGeoSalesMapPage = () => {
     const shopId = shop.id || shop._id;
     setActionLoading(true);
     try {
-      const res = await adminService.toggleShopActive(shopId);
+      const res = await adminService.toggleShopActive(shopId, !shop.isActive);
       if (res.success) {
         const nextState = res.isActive !== undefined ? res.isActive : !shop.isActive;
         showFeedback(
