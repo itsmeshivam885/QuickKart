@@ -21,6 +21,12 @@ export const PublicShopsPage = () => {
     'Stationery & Office',
     'Groceries & Daily Essentials',
     'Electronics & Mobiles',
+    'General Store & Daily Needs',
+    'Fruits & Vegetables',
+    'Bakery & Food',
+    'Home & Kitchen',
+    'Mobile & Electronics',
+    'Beauty & Personal Care',
   ];
 
   const fetchShops = async () => {

@@ -33,6 +33,12 @@ export const LandingPage = () => {
     { name: 'Stationery & Office', icon: '📚', desc: 'Notebooks, pens, art' },
     { name: 'Groceries & Essentials', icon: '🛒', desc: 'Daily pantry items' },
     { name: 'Electronics & Mobiles', icon: '📱', desc: 'Cables, chargers, parts' },
+    { name: 'General Store & Daily Needs', icon: '🏪', desc: 'Daily essentials' },
+    { name: 'Fruits & Vegetables', icon: '🍎', desc: 'Fresh produce' },
+    { name: 'Bakery & Food', icon: '🍞', desc: 'Baked goods and food' },
+    { name: 'Home & Kitchen', icon: '🍳', desc: 'Home appliances and kitchenware' },
+    { name: 'Mobile & Electronics', icon: '💻', desc: 'Phones and gadgets' },
+    { name: 'Beauty & Personal Care', icon: '💄', desc: 'Cosmetics and care' },
   ];
 
   const handleSearchSubmit = (e) => {

@@ -17,6 +17,7 @@ import { LiveStateToggleCard } from '../../components/shopkeeper/LiveStateToggle
 import { ShelfIntelligenceCard } from '../../components/shopkeeper/ShelfIntelligenceCard';
 import { ProductFormModal } from '../../components/shopkeeper/ProductFormModal';
 import { RespondModal } from '../../components/shopkeeper/RespondModal';
+import { ShopLocationMap } from '../../components/shopkeeper/ShopLocationMap';
 import { Badge } from '../../components/common/Badge';
 
 import {
@@ -153,7 +154,7 @@ export const ShopDashboardPage = () => {
   const handleBargainSubmit = async (requestId, payload) => {
     const res = await requestService.bargainRequest(requestId, payload);
     if (res.success) {
-      addToast(res.message || 'Counter offer sent via Golden Taraju', 'success');
+      addToast(res.message || 'Counter offer sent successfully', 'success');
       // Update local state in requests
       setRequests((prev) =>
         prev.map((r) => (r.id === requestId || r._id === requestId ? res.request : r))
@@ -231,7 +232,7 @@ export const ShopDashboardPage = () => {
               </span>
             )}
             <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-amber-300 flex items-center gap-1 shadow-sm">
-              <span>⚖️</span> Golden Taraju Enabled
+              <span>⚖️</span> Smart Bargaining Enabled
             </span>
           </div>
 
@@ -362,6 +363,9 @@ export const ShopDashboardPage = () => {
 
       {/* FEATURES 4 & 5: Regional Sales Ranking & My Shop vs Regional Demand */}
       <RegionalSalesRankingSection shopId={shop?._id || shop?.id} />
+
+      {/* FEATURE: Shop Location Map */}
+      <ShopLocationMap shop={shop} />
 
       {/* Operational Models: Live State Toggle & Shelf Intelligence (Preserved Existing Capabilities) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

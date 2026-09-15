@@ -54,6 +54,12 @@ export const DiscoverFeed = () => {
     'Stationery & Office',
     'Groceries & Daily Essentials',
     'Electronics & Mobiles',
+    'General Store & Daily Needs',
+    'Fruits & Vegetables',
+    'Bakery & Food',
+    'Home & Kitchen',
+    'Mobile & Electronics',
+    'Beauty & Personal Care',
   ];
 
   // Fetch shops and products (stale-while-revalidate: keep old data visible on refetch)

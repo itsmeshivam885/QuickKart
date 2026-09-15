@@ -132,12 +132,25 @@ export const ShopProfileEditPage = () => {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                 Trade Category
               </label>
-              <input
-                type="text"
+              <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
-              />
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+              >
+                <option value="">Select a category</option>
+                <option value="Hardware & Tools">Hardware & Tools</option>
+                <option value="Plumbing & Sanitary">Plumbing & Sanitary</option>
+                <option value="Electrical & Lighting">Electrical & Lighting</option>
+                <option value="Stationery & Office">Stationery & Office</option>
+                <option value="Groceries & Daily Essentials">Groceries & Daily Essentials</option>
+                <option value="Electronics & Mobiles">Electronics & Mobiles</option>
+                <option value="General Store & Daily Needs">General Store & Daily Needs</option>
+                <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+                <option value="Bakery & Food">Bakery & Food</option>
+                <option value="Home & Kitchen">Home & Kitchen</option>
+                <option value="Mobile & Electronics">Mobile & Electronics</option>
+                <option value="Beauty & Personal Care">Beauty & Personal Care</option>
+              </select>
             </div>
           </div>
 

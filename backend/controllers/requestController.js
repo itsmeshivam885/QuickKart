@@ -511,7 +511,7 @@ export const bargainRequest = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: 'Counter offer submitted via Golden Taraju',
+      message: 'Counter offer submitted successfully',
       request: reqItem,
     });
   } catch (error) {
