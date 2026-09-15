@@ -175,28 +175,14 @@ export const login = async (req, res, next) => {
     }
 
     // Fallback mode without database
-    const isSharma = normalizedEmail.includes('sharma');
-    const isGupta = normalizedEmail.includes('gupta');
-    const isShopkeeper = isSharma || isGupta;
+    const isShopkeeper = normalizedEmail.includes('sharma') || normalizedEmail.includes('gupta');
     const isAdmin = normalizedEmail.includes('admin');
     const fallbackRole = isAdmin ? 'admin' : isShopkeeper ? 'shopkeeper' : 'customer';
-
-    let fallbackId = 'a0000000-0000-0000-0000-000000000001';
-    let fallbackName = 'Rahul Sharma';
-    let fallbackShop = null;
-
-    if (isAdmin) {
-      fallbackId = 'a0000000-0000-0000-0000-000000000004';
-      fallbackName = 'QuickKart Admin';
-    } else if (isSharma) {
-      fallbackId = 'a0000000-0000-0000-0000-000000000002';
-      fallbackName = 'Sharma Hardware Store';
-      fallbackShop = FALLBACK_SHOPS[0];
-    } else if (isGupta) {
-      fallbackId = 'a0000000-0000-0000-0000-000000000003';
-      fallbackName = 'Gupta Building Materials';
-      fallbackShop = FALLBACK_SHOPS[1];
-    }
+    const fallbackId = isAdmin
+      ? 'a0000000-0000-0000-0000-000000000004'
+      : isShopkeeper
+      ? 'a0000000-0000-0000-0000-000000000002'
+      : 'a0000000-0000-0000-0000-000000000001';
 
     const token = generateToken(fallbackId, fallbackRole);
     return res.json({
@@ -205,11 +191,11 @@ export const login = async (req, res, next) => {
       user: {
         _id: fallbackId,
         id: fallbackId,
-        name: fallbackName,
+        name: isShopkeeper ? 'Ramesh Sharma' : isAdmin ? 'QuickKart Admin' : 'Rahul Sharma',
         email: normalizedEmail,
         role: fallbackRole,
       },
-      shop: fallbackShop,
+      shop: isShopkeeper ? FALLBACK_SHOPS[0] : null,
     });
   } catch (error) {
     next(error);
@@ -249,38 +235,24 @@ export const getMe = async (req, res, next) => {
           id: user.id,
           ...user,
         },
-        shop: shop || (user.role === 'shopkeeper' ? (FALLBACK_SHOPS.find(s => s.owner_id === user.id) || FALLBACK_SHOPS[0]) : null),
+        shop: shop || (user.role === 'shopkeeper' ? FALLBACK_SHOPS[0] : null),
       });
     }
 
     const isShopkeeper = req.user.role === 'shopkeeper';
-    const fallbackShop = isShopkeeper
-      ? (FALLBACK_SHOPS.find(s => s.owner_id === req.user.id) || (req.user.id === 'a0000000-0000-0000-0000-000000000003' ? FALLBACK_SHOPS[1] : FALLBACK_SHOPS[0]))
-      : null;
-
-    let fallbackName = req.user.name || 'QuickKart User';
-    if (req.user.id === 'a0000000-0000-0000-0000-000000000002') {
-      fallbackName = 'Sharma Hardware Store';
-    } else if (req.user.id === 'a0000000-0000-0000-0000-000000000003') {
-      fallbackName = 'Gupta Building Materials';
-    } else if (req.user.id === 'a0000000-0000-0000-0000-000000000004') {
-      fallbackName = 'QuickKart Admin';
-    } else if (req.user.id === 'a0000000-0000-0000-0000-000000000001') {
-      fallbackName = 'Rahul Sharma';
-    }
 
     return res.json({
       success: true,
       user: {
         _id: req.user.id,
         id: req.user.id,
-        name: fallbackName,
+        name: req.user.name || 'QuickKart User',
         email: req.user.email || 'user@quickkart.com',
         role: req.user.role || 'customer',
         phone: req.user.phone,
         address: req.user.address,
       },
-      shop: fallbackShop,
+      shop: isShopkeeper ? FALLBACK_SHOPS[0] : null,
     });
   } catch (error) {
     next(error);
