@@ -2,19 +2,82 @@ import { supabase } from '../config/supabase.js';
 import bcrypt from 'bcryptjs';
 import {
   FALLBACK_SHOPS,
-  FALLBACK_USERS,
   FALLBACK_PRODUCTS,
   FALLBACK_RESERVATIONS,
   FALLBACK_CUSTOMER_REQUESTS,
-  FALLBACK_TRAFFIC_STATS,
 } from '../utils/fallbackData.js';
+
+// Default platform persona test accounts matching README.md exactly (2 shopkeepers, 1 customer, 1 admin)
+export let DEFAULT_ADMIN_USERS = [
+  {
+    _id: 'a0000000-0000-0000-0000-000000000001',
+    id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'Rahul Sharma',
+    email: 'customer@quickkart.com',
+    role: 'customer',
+    phone: '+91 9811223344',
+    address: { street: 'Flat 402, Block 8', area: 'Karol Bagh', city: 'New Delhi', state: 'Delhi', pincode: '110005' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-10T10:30:00.000Z',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000002',
+    id: 'a0000000-0000-0000-0000-000000000002',
+    name: 'Sharma Hardware Store',
+    email: 'sharma@quickkart.com',
+    role: 'shopkeeper',
+    phone: '+91 9876543210',
+    address: { street: 'Shop 14, Block 8, Ajmal Khan Road', area: 'Karol Bagh', city: 'New Delhi', state: 'Delhi', pincode: '110005' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-05T08:00:00.000Z',
+    shopId: 'b0000000-0000-0000-0000-000000000001',
+    shopName: 'Sharma Hardware & Daily Essentials Store',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000003',
+    id: 'a0000000-0000-0000-0000-000000000003',
+    name: 'Gupta Building Materials',
+    email: 'gupta@quickkart.com',
+    role: 'shopkeeper',
+    phone: '+91 9876543211',
+    address: { street: 'Plot 22, Connaught Circus', area: 'Connaught Place', city: 'New Delhi', state: 'Delhi', pincode: '110001' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-06T09:30:00.000Z',
+    shopId: 'b0000000-0000-0000-0000-000000000002',
+    shopName: 'Gupta Building Materials & Hardware',
+  },
+  {
+    _id: 'a0000000-0000-0000-0000-000000000004',
+    id: 'a0000000-0000-0000-0000-000000000004',
+    name: 'QuickKart Admin',
+    email: 'admin@quickkart.com',
+    role: 'admin',
+    phone: '+91 9800000000',
+    address: { street: 'Platform Operations HQ', area: 'Connaught Place', city: 'New Delhi', state: 'Delhi', pincode: '110001' },
+    status: 'active',
+    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+];
+
+export const DEFAULT_TRAFFIC_STATS = {
+  dailyVisitors: 1420,
+  searchRequestsToday: 3240,
+  pageViewsToday: 8650,
+  conversionRate: 12.8,
+  growthPercentage: 17.3,
+};
+
 
 // @desc    Get Admin platform KPI metrics
 // @route   GET /api/admin/stats
 // @access  Private (Admin)
 export const getStats = async (req, res, next) => {
   try {
-    let usersList = FALLBACK_USERS;
+    let usersList = DEFAULT_ADMIN_USERS;
     let shopsList = FALLBACK_SHOPS;
     let productsList = FALLBACK_PRODUCTS;
     let reservationsList = FALLBACK_RESERVATIONS;
@@ -137,7 +200,7 @@ export const getStats = async (req, res, next) => {
           total: requestsList.length,
           active: activeRequests,
         },
-        traffic: FALLBACK_TRAFFIC_STATS,
+        traffic: DEFAULT_TRAFFIC_STATS,
       },
       recentUsers: usersList.slice(0, 5),
       recentRequests: requestsList.slice(0, 5),
@@ -154,7 +217,7 @@ export const getStats = async (req, res, next) => {
 export const getAllUsers = async (req, res, next) => {
   try {
     const { role, status, search } = req.query;
-    let users = FALLBACK_USERS;
+    let users = DEFAULT_ADMIN_USERS;
 
     if (supabase) {
       try {
@@ -296,7 +359,7 @@ export const toggleUserStatus = async (req, res, next) => {
     }
 
     // Update in-memory fallback list
-    const found = FALLBACK_USERS.find(u => u.id === id || u._id === id);
+    const found = DEFAULT_ADMIN_USERS.find(u => u.id === id || u._id === id);
     if (found) {
       found.status = status;
     }
@@ -410,7 +473,7 @@ export const getAllShops = async (req, res, next) => {
 
     // Attach owner details
     const enhanced = filtered.map(s => {
-      const owner = FALLBACK_USERS.find(u => u.id === s.owner_id || u._id === s.owner_id);
+      const owner = DEFAULT_ADMIN_USERS.find(u => u.id === s.owner_id || u._id === s.owner_id);
       return {
         ...s,
         ownerId: owner ? {
@@ -768,7 +831,7 @@ export const getTrafficAnalytics = async (req, res, next) => {
   try {
     res.json({
       success: true,
-      traffic: FALLBACK_TRAFFIC_STATS,
+      traffic: DEFAULT_TRAFFIC_STATS,
       deviceBreakdown: {
         mobile: 68.4,
         desktop: 28.2,
@@ -787,7 +850,7 @@ export const getTrafficAnalytics = async (req, res, next) => {
 export const getGeoMapData = async (req, res, next) => {
   try {
     let shops = FALLBACK_SHOPS;
-    let users = FALLBACK_USERS;
+    let users = DEFAULT_ADMIN_USERS;
 
     if (supabase) {
       try {
@@ -1127,7 +1190,7 @@ export const createAdminUser = async (req, res, next) => {
       shopName: shopName || (role === 'shopkeeper' ? `${name.trim()}'s Mart` : null),
     };
 
-    FALLBACK_USERS.unshift(newUser);
+    DEFAULT_ADMIN_USERS.unshift(newUser);
 
     if (role === 'shopkeeper') {
       const shopId = 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
@@ -1181,9 +1244,9 @@ export const deleteAdminUser = async (req, res, next) => {
     if (supabase) {
       await supabase.from('users').delete().eq('id', id);
     }
-    const idx = FALLBACK_USERS.findIndex(u => u.id === id || u._id === id);
+    const idx = DEFAULT_ADMIN_USERS.findIndex(u => u.id === id || u._id === id);
     if (idx !== -1) {
-      FALLBACK_USERS.splice(idx, 1);
+      DEFAULT_ADMIN_USERS.splice(idx, 1);
     }
     res.json({
       success: true,
@@ -1294,7 +1357,7 @@ export const createAdminShop = async (req, res, next) => {
 
     FALLBACK_SHOPS.unshift(newShop);
 
-    FALLBACK_USERS.unshift({
+    DEFAULT_ADMIN_USERS.unshift({
       _id: ownerId,
       id: ownerId,
       name: newShop.ownerName,

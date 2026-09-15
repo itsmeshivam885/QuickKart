@@ -25,4 +25,24 @@ export const requestService = {
     const res = await api.post(`/requests/${requestId}/respond`, data);
     return res.data;
   },
+
+  bargainRequest: async (requestId, data) => {
+    const res = await api.post(`/requests/${requestId}/bargain`, data);
+    return res.data;
+  },
+
+  acceptRequest: async (requestId) => {
+    const res = await api.post(`/requests/${requestId}/accept`);
+    return res.data;
+  },
+
+  rejectRequest: async (requestId) => {
+    const res = await api.post(`/requests/${requestId}/reject`);
+    return res.data;
+  },
+
+  confirmBargainDeal: async (requestId, dealData = {}) => {
+    const res = await api.post(`/requests/${requestId}/confirm-deal`, dealData);
+    return res.data;
+  },
 };

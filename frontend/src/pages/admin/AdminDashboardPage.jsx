@@ -292,7 +292,7 @@ export const AdminDashboardPage = () => {
             </Link>
 
             <span className="text-xs text-slate-400 font-medium">
-              Pins for 8 stores across 5 states mapped with Google Maps links
+              Pins for active stores mapped with directions & live status
             </span>
           </div>
         </div>

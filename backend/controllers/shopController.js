@@ -1,6 +1,6 @@
 import { supabase } from '../config/supabase.js';
 import { calculateDistanceKm } from '../utils/geoCoder.js';
-import { FALLBACK_SHOPS, FALLBACK_PRODUCTS, FALLBACK_RESERVATIONS, FALLBACK_USERS } from '../utils/fallbackData.js';
+import { FALLBACK_SHOPS, FALLBACK_PRODUCTS, FALLBACK_RESERVATIONS } from '../utils/fallbackData.js';
 
 // @desc    Get nearby shops with geospatial filtering & search using Supabase
 // @route   GET /api/shops/nearby
@@ -8,23 +8,22 @@ import { FALLBACK_SHOPS, FALLBACK_PRODUCTS, FALLBACK_RESERVATIONS, FALLBACK_USER
 export const getNearbyShops = async (req, res, next) => {
   try {
     const {
-      lat = 28.6139,
-      lng = 77.2090,
+      lng,
+      lat,
       radius = 10,
       category,
       search,
     } = req.query;
 
-    const userLat = parseFloat(lat);
-    const userLng = parseFloat(lng);
+    const userLng = parseFloat(lng) || 77.2090;
+    const userLat = parseFloat(lat) || 28.6139;
 
     let shops = [];
 
     if (supabase) {
       let query = supabase
         .from('shops')
-        .select('*, products(*)')
-        .eq('is_active', true)
+        .select('*, products(id, name, price, mrp, unit, is_available, images)')
         .eq('verification_status', 'verified');
 
       if (category && category !== 'All') {
@@ -32,15 +31,14 @@ export const getNearbyShops = async (req, res, next) => {
       }
 
       if (search) {
-        query = query.or(`shop_name.ilike.%${search}%,description.ilike.%${search}%`);
+        query = query.or(`shop_name.ilike.%${search}%,description.ilike.%${search}%,category.ilike.%${search}%`);
       }
 
-      const { data: dbShops, error } = await query;
+      const { data: shopsData, error } = await query;
 
-      if (!error && dbShops && dbShops.length > 0) {
-        shops = dbShops.map((s) => {
-          const coords = [s.location_lng || 77.1906, s.location_lat || 28.6517];
-          const dist = calculateDistanceKm([userLng, userLat], coords);
+      if (!error && shopsData && shopsData.length > 0) {
+        shops = shopsData.map((s) => {
+          const dist = calculateDistanceKm([userLng, userLat], [s.location_lng || 77.1906, s.location_lat || 28.6517]);
           return {
             _id: s.id,
             id: s.id,
@@ -49,13 +47,16 @@ export const getNearbyShops = async (req, res, next) => {
             description: s.description,
             category: s.category,
             address: s.address,
-            location: { coordinates: coords },
+            location: { coordinates: [s.location_lng, s.location_lat] },
             contactPhone: s.contact_phone,
+            bannerImage: s.banner_image || 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=800&q=80',
             rating: s.rating || 4.8,
-            numReviews: s.num_reviews || 0,
-            bannerImage: s.banner_image,
+            numReviews: s.num_reviews || 120,
             isActive: s.is_active,
             verificationStatus: s.verification_status,
+            liveServingCount: s.live_serving_count || 2,
+            estWaitTimeMinutes: s.est_wait_time_minutes || 5,
+            promptResponseRate: s.prompt_response_rate || 95,
             distanceKm: parseFloat(dist.toFixed(1)),
             topProducts: (s.products || []).slice(0, 4),
           };
@@ -67,20 +68,15 @@ export const getNearbyShops = async (req, res, next) => {
       shops = FALLBACK_SHOPS.map((s) => {
         const coords = s.location?.coordinates || [77.1906, 28.6517];
         const dist = calculateDistanceKm([userLng, userLat], coords);
-        const shopProducts = FALLBACK_PRODUCTS.filter((p) => {
-          const pShopId = p.shopId?._id || p.shopId?.id || p.shopId || p.shop_id;
-          return pShopId === s.id || pShopId === s._id;
-        });
         return {
           ...s,
           distanceKm: parseFloat(dist.toFixed(1)),
-          topProducts: shopProducts.length > 0 ? shopProducts.slice(0, 4) : (s.topProducts || []),
         };
       });
     }
 
-    // Filter by radius & active status & sort
-    const withinRadius = shops.filter((s) => s.distanceKm <= parseFloat(radius) && s.isActive !== false);
+    // Filter by radius & sort
+    const withinRadius = shops.filter((s) => s.distanceKm <= parseFloat(radius));
     withinRadius.sort((a, b) => a.distanceKm - b.distanceKm);
 
     res.json({
@@ -139,16 +135,7 @@ export const getShopById = async (req, res, next) => {
     }
 
     const fallback = FALLBACK_SHOPS.find((s) => s._id === id || s.id === id) || FALLBACK_SHOPS[0];
-    const shopProducts = FALLBACK_PRODUCTS.filter((p) => {
-      const pShopId = p.shopId?._id || p.shopId?.id || p.shopId || p.shop_id;
-      return pShopId === fallback.id || pShopId === fallback._id;
-    });
-
-    return res.json({
-      success: true,
-      shop: fallback,
-      products: shopProducts.length > 0 ? shopProducts : (fallback.topProducts || []),
-    });
+    return res.json({ success: true, shop: fallback, products: fallback.topProducts });
   } catch (error) {
     next(error);
   }
@@ -249,43 +236,20 @@ export const registerShop = async (req, res, next) => {
       });
     }
 
-    // Fallback response with in-memory persistence
-    const mockId = 'b0000000-0000-0000-0000-' + Math.random().toString(36).substring(2, 14);
-    const newShop = {
-      _id: mockId,
-      id: mockId,
-      owner_id: req.user.id,
-      ownerName: req.user.name || 'Store Merchant',
-      shopName: shopName.trim(),
-      tagline: tagline || 'Local neighborhood authorized store',
-      description: description || 'Local neighborhood store offering quality products and quick counter pickup.',
-      category,
-      address: address || { street: 'Main Market', area: 'Karol Bagh', city: 'New Delhi', state: 'Delhi', pincode: '110005' },
-      location: { coordinates: [parseFloat(locationLng) || 77.1906, parseFloat(locationLat) || 28.6517] },
-      contactPhone: contactPhone || req.user.phone || '+91 9876543210',
-      bannerImage: bannerImage || 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=600&q=80',
-      rating: 5.0,
-      numReviews: 0,
-      isActive: true,
-      verificationStatus: 'verified',
-      totalProductsCount: 0,
-      totalSalesVolume: 0,
-      createdAt: new Date().toISOString(),
-    };
-    FALLBACK_SHOPS.unshift(newShop);
-
-    // Also update user's role and connected shop in FALLBACK_USERS
-    const userInList = FALLBACK_USERS.find(u => u.id === req.user.id || u._id === req.user.id);
-    if (userInList) {
-      userInList.role = 'shopkeeper';
-      userInList.shopId = mockId;
-      userInList.shopName = newShop.shopName;
-    }
-
+    // Fallback response
+    const mockId = 'b0000000-0000-0000-0000-000000000099';
     return res.status(201).json({
       success: true,
       message: 'Shop registered successfully',
-      shop: newShop,
+      shop: {
+        _id: mockId,
+        id: mockId,
+        owner_id: req.user.id,
+        shopName,
+        category,
+        address: address || {},
+        verificationStatus: 'verified',
+      },
     });
   } catch (error) {
     next(error);
@@ -330,24 +294,9 @@ export const getMyShop = async (req, res, next) => {
       }
     }
 
-    const myShop = FALLBACK_SHOPS.find(
-      (s) =>
-        s.owner_id === req.user?.id ||
-        s.owner_id === req.user?._id ||
-        (s.ownerName && req.user?.name && s.ownerName.toLowerCase() === req.user.name.toLowerCase())
-    ) || FALLBACK_SHOPS[0];
-
-    const myProducts = FALLBACK_PRODUCTS.filter((p) => {
-      const pShopId = p.shopId?._id || p.shopId?.id || p.shopId || p.shop_id;
-      return pShopId === myShop.id || pShopId === myShop._id;
-    });
-
     res.json({
       success: true,
-      shop: {
-        ...myShop,
-        products: myProducts,
-      },
+      shop: FALLBACK_SHOPS[0],
     });
   } catch (error) {
     next(error);
@@ -386,39 +335,10 @@ export const updateMyShop = async (req, res, next) => {
       });
     }
 
-    const myShop = FALLBACK_SHOPS.find(
-      (s) =>
-        s.owner_id === req.user?.id ||
-        s.owner_id === req.user?._id ||
-        (s.ownerName && req.user?.name && s.ownerName.toLowerCase() === req.user.name.toLowerCase())
-    ) || FALLBACK_SHOPS[0];
-
-    if (shopName) myShop.shopName = shopName.trim();
-    if (tagline !== undefined) myShop.tagline = tagline;
-    if (category) myShop.category = category;
-    if (description !== undefined) myShop.description = description;
-    if (contactPhone) myShop.contactPhone = contactPhone;
-    if (address) myShop.address = { ...myShop.address, ...address };
-
-    // Synchronize store info across all products owned by this shop in FALLBACK_PRODUCTS
-    FALLBACK_PRODUCTS.forEach((p) => {
-      const pShopId = p.shopId?._id || p.shopId?.id || p.shopId || p.shop_id;
-      if (pShopId === myShop.id || pShopId === myShop._id) {
-        if (typeof p.shopId === 'object' && p.shopId !== null) {
-          if (shopName) p.shopId.shopName = shopName.trim();
-          if (address) p.shopId.address = { ...p.shopId.address, ...address };
-        }
-      }
-    });
-
-    // Synchronize connected user profile in FALLBACK_USERS
-    const user = FALLBACK_USERS.find((u) => u.id === req.user?.id || u._id === req.user?.id);
-    if (user && shopName) user.shopName = shopName.trim();
-
     res.json({
       success: true,
-      message: 'Store profile updated successfully',
-      shop: myShop,
+      message: 'Store profile updated',
+      shop: req.body,
     });
   } catch (error) {
     next(error);
@@ -455,22 +375,10 @@ export const updateLiveBusinessState = async (req, res, next) => {
       });
     }
 
-    const myShop = FALLBACK_SHOPS.find(
-      (s) =>
-        s.owner_id === req.user?.id ||
-        s.owner_id === req.user?._id ||
-        (s.ownerName && req.user?.name && s.ownerName.toLowerCase() === req.user.name.toLowerCase())
-    ) || FALLBACK_SHOPS[0];
-
-    if (liveServingCount !== undefined) myShop.liveServingCount = parseInt(liveServingCount);
-    if (estWaitTimeMinutes !== undefined) myShop.estWaitTimeMinutes = parseInt(estWaitTimeMinutes);
-    if (promptResponseRate !== undefined) myShop.promptResponseRate = parseInt(promptResponseRate);
-    if (isOpenNow !== undefined) myShop.isActive = !!isOpenNow;
-
     res.json({
       success: true,
-      message: 'Live business capability updated successfully',
-      shop: myShop,
+      message: 'Live business capability updated',
+      shop: req.body,
     });
   } catch (error) {
     next(error);

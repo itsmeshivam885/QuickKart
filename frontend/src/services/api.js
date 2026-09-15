@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const RENDER_BACKEND_URL = 'https://quickkart-ollt.onrender.com';
-const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-const API_HOST = import.meta.env.VITE_API_URL || (isLocalhost ? 'http://localhost:5000' : RENDER_BACKEND_URL);
+const API_HOST = import.meta.env.VITE_API_URL || RENDER_BACKEND_URL;
 const BASE_URL = `${API_HOST.replace(/\/$/, '')}/api`;
 
 const api = axios.create({
