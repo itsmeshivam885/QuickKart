@@ -97,6 +97,7 @@ export const DiscoverFeed = () => {
           lat: coordinates[1],
           radius: radiusKm,
           category: selectedCategory !== 'All' ? selectedCategory : undefined,
+          search: searchQuery || undefined,
         }),
         productService.getProducts({
           lng: coordinates[0],
