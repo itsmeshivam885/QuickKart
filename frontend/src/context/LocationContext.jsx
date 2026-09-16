@@ -10,12 +10,6 @@ export const PRESET_AREAS = [
   { name: 'Cyber Hub, Gurugram', coords: [77.0888, 28.4950] },
   { name: 'Bandra West, Mumbai', coords: [72.8335, 19.0596] },
   { name: 'Indiranagar, Bengaluru', coords: [77.6412, 12.9784] },
-  // Madhya Pradesh popular picks (VIT Bhopal is at Kothri Kalan, Sehore district)
-  { name: 'VIT Bhopal (Kothri Kalan)', coords: [76.8498, 23.0755] },
-  { name: 'Ashta, Sehore', coords: [76.7222, 23.0195] },
-  { name: 'Sehore City', coords: [77.0846, 23.2049] },
-  { name: 'Bairagarh, Bhopal', coords: [77.3366, 23.2745] },
-  { name: 'New Market, Bhopal', coords: [77.4003, 23.2352] },
 ];
 
 export const LocationProvider = ({ children }) => {
