@@ -1,21 +1,34 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Star, Clock, Phone, Store, MessageSquare, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { MapPin, Star, Store, MessageSquare, CheckCircle2, PackageCheck, AlertTriangle, Clock, Truck, Landmark, Navigation } from 'lucide-react';
 import { Badge } from '../common/Badge';
 
 export const ShopCard = ({ shop, onBroadcastClick }) => {
   const isOpen = shop.openingHours?.isOpenNow ?? true;
+  const products = shop.topProducts || [];
+  const availableItems = shop.availableItemCount ?? products.filter((item) => item.isAvailable !== false).length;
+  const lowStockItems = shop.lowStockItemCount ?? products.filter((item) => {
+    const quantity = item.quantityInStock ?? item.quantity_in_stock;
+    const threshold = item.lowStockThreshold ?? item.low_stock_threshold ?? 3;
+    return item.isAvailable !== false && Number.isFinite(Number(quantity)) && Number(quantity) <= Number(threshold);
+  }).length;
+  const hasStock = availableItems > 0;
+  const addr = shop.address || {};
+  const addressLine = [addr.street, addr.area].filter(Boolean).join(', ');
+  const cityLine = [addr.city, addr.state].filter(Boolean).join(', ') + (addr.pincode ? ` - ${addr.pincode}` : '');
+  const hasAddress = Boolean(addressLine || cityLine);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-card-hover transition-all duration-300 overflow-hidden flex flex-col group">
+    <div className="group bg-white rounded-3xl border border-slate-200/70 shadow-[0_4px_18px_rgba(2,6,23,0.08)] hover:shadow-[0_14px_34px_rgba(2,6,23,0.16)] hover:-translate-y-1 hover:border-brand-200/70 transition-all duration-300 overflow-hidden flex flex-col">
       {/* Banner / Header */}
-      <div className="h-36 relative overflow-hidden bg-slate-100">
+      <div className="h-40 relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
         <img
           src={shop.bannerImage || shop.images?.[0] || 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=800&q=80'}
           alt={shop.shopName}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          loading="lazy"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/25 to-transparent" />
 
         {/* Distance Badge */}
         <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-slate-800 shadow-sm flex items-center gap-1">
@@ -23,20 +36,28 @@ export const ShopCard = ({ shop, onBroadcastClick }) => {
           <span>{shop.distanceKm ? `${shop.distanceKm.toFixed(1)} km` : 'Nearby'}</span>
         </div>
 
-        {/* Verification Status */}
-        {shop.verificationStatus === 'verified' && (
-          <div className="absolute top-3 left-3 bg-emerald-500/90 text-white backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm">
-            <CheckCircle2 className="w-3 h-3" />
-            Verified Local Shop
-          </div>
-        )}
+        {/* Live open/closed + verification chips */}
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md shadow-sm ${
+            isOpen ? 'bg-emerald-500/90 text-white' : 'bg-slate-200/90 text-slate-600'
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-white animate-pulse' : 'bg-slate-400'}`} />
+            {isOpen ? 'Open' : 'Closed'}
+          </span>
+          {shop.verificationStatus === 'verified' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/90 text-white backdrop-blur-md text-[10px] font-bold shadow-sm">
+              <CheckCircle2 className="w-3 h-3" />
+              Verified
+            </span>
+          )}
+        </div>
 
         {/* Shop Title overlay */}
         <div className="absolute bottom-3 left-3 right-3 text-white">
-          <h3 className="font-black text-lg leading-tight drop-shadow-sm group-hover:text-brand-300 transition-colors">
+          <h3 className="font-extrabold text-lg leading-tight drop-shadow group-hover:text-brand-300 transition-colors">
             {shop.shopName}
           </h3>
-          <p className="text-xs text-slate-200 font-medium truncate drop-shadow-sm">
+          <p className="text-[11px] text-slate-100 font-medium truncate drop-shadow">
             {shop.tagline || shop.category}
           </p>
         </div>
@@ -46,22 +67,81 @@ export const ShopCard = ({ shop, onBroadcastClick }) => {
       <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
         {/* Rating & Category */}
         <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200/60 font-bold text-amber-900">
+          <div className="inline-flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200/70 font-bold text-amber-900 shadow-sm">
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             <span>{shop.rating?.toFixed(1) || '4.5'}</span>
-            <span className="text-amber-600 font-normal">({shop.reviewCount || 0} reviews)</span>
+            <span className="text-amber-600/80 font-medium">({shop.reviewCount ?? shop.numReviews ?? 0})</span>
           </div>
 
           <Badge variant="primary">{shop.category}</Badge>
         </div>
 
+        {/* Real shop address */}
+        {hasAddress && (
+          <div className="bg-gradient-to-br from-brand-50 to-slate-50 border border-brand-100/70 rounded-2xl px-3 py-2.5 space-y-1">
+            <div className="flex items-start gap-2 text-xs text-slate-800 font-semibold">
+              <MapPin className="w-3.5 h-3.5 text-brand-600 mt-0.5 flex-shrink-0" />
+              <div className="min-w-0">
+                {addressLine && <p className="truncate">{addressLine}</p>}
+                {cityLine && <p className="text-[11px] text-slate-500 font-medium truncate">{cityLine}</p>}
+              </div>
+            </div>
+            {shop.landmark && (
+              <div className="flex items-start gap-2 text-[11px] text-slate-500">
+                <Landmark className="w-3 h-3 text-brand-500 mt-0.5 flex-shrink-0" />
+                <span className="truncate">{shop.landmark}</span>
+              </div>
+            )}
+            <a
+              href={
+                shop.location?.coordinates
+                  ? `https://www.google.com/maps/dir/?api=1&destination=${shop.location.coordinates[1]},${shop.location.coordinates[0]}`
+                  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${shop.shopName} ${cityLine}`)}`
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-700 hover:text-brand-800 transition-colors"
+            >
+              <Navigation className="w-3 h-3" />
+              Get Directions
+            </a>
+          </div>
+        )}
+
+        {/* Hours & Delivery capability */}
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
+          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border ${isOpen ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-600'}`}>
+            <Clock className="w-3 h-3" />
+            {isOpen ? `Open until ${shop.openingHours?.close || '9:00 PM'}` : 'Closed'}
+          </span>
+          {shop.deliveryAvailable ? (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border bg-sky-50 border-sky-200 text-sky-700">
+              <Truck className="w-3 h-3" />
+              Home delivery {shop.deliveryEtaMinutes ? `~${shop.deliveryEtaMinutes} min` : 'available'}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border bg-slate-50 border-slate-200 text-slate-500">
+              <Store className="w-3 h-3" />
+              Store pickup only
+            </span>
+          )}
+        </div>
+
         {/* Live Business Capability (Chapter 16.4 & Chapter 6) */}
-        <div className="bg-slate-50 rounded-xl p-2.5 text-xs text-slate-600 space-y-1.5 border border-slate-100">
+        <div className="bg-slate-50/80 rounded-2xl p-2.5 text-xs text-slate-600 space-y-1.5 border border-slate-200/70">
           <div className="flex justify-between items-center">
-            <span className="text-slate-400">Live Status:</span>
-            <span className={`font-semibold flex items-center gap-1 ${isOpen ? 'text-emerald-600' : 'text-rose-500'}`}>
+            <span className="text-slate-400 font-medium">Live Status</span>
+            <span className={`font-bold inline-flex items-center gap-1 ${isOpen ? 'text-emerald-600' : 'text-rose-500'}`}>
               <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
               {isOpen ? 'Open Now' : 'Closed'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between border-t border-slate-200 pt-1.5">
+            <span className="text-slate-400 font-medium">Stock preview</span>
+            <span className="font-bold text-slate-800 inline-flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-emerald-600"><PackageCheck className="w-3.5 h-3.5" />{availableItems} in stock</span>
+              {!hasStock && <span className="text-rose-600 font-medium">No stock</span>}
+              {lowStockItems > 0 && <span className="inline-flex items-center gap-1 text-amber-600"><AlertTriangle className="w-3.5 h-3.5" />{lowStockItems} low</span>}
             </span>
           </div>
           {shop.liveState && (
@@ -77,14 +157,14 @@ export const ShopCard = ({ shop, onBroadcastClick }) => {
         {/* Top Product preview tags */}
         {shop.topProducts && shop.topProducts.length > 0 && (
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">
-              Popular in store:
+            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">
+              Popular in store
             </span>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {shop.topProducts.map((p) => (
                 <span
                   key={p._id}
-                  className="text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium truncate max-w-[150px]"
+                  className="text-[11px] bg-slate-100/90 text-slate-600 px-2 py-0.5 rounded-lg border border-slate-200/70 font-medium truncate max-w-[150px]"
                 >
                   {p.name}
                 </span>
@@ -94,17 +174,17 @@ export const ShopCard = ({ shop, onBroadcastClick }) => {
         )}
 
         {/* Action Buttons */}
-        <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+        <div className="pt-2 border-t border-slate-200/80 flex items-center gap-2">
           <Link
             to={`/shops/${shop._id}`}
-            className="flex-1 py-2 text-center text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-xl transition-colors flex items-center justify-center gap-1"
+            className="flex-1 py-2.5 text-center text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 rounded-xl transition-all shadow-sm shadow-brand-600/20 flex items-center justify-center gap-1"
           >
             <Store className="w-3.5 h-3.5" />
             View Store
           </Link>
           <button
             onClick={() => onBroadcastClick && onBroadcastClick(shop)}
-            className="flex-1 py-2 text-center text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-1"
+            className="flex-1 py-2.5 text-center text-xs font-bold text-brand-700 bg-white border-2 border-brand-200 hover:bg-brand-50 rounded-xl transition-all flex items-center justify-center gap-1"
           >
             <MessageSquare className="w-3.5 h-3.5" />
             Ask Stock
