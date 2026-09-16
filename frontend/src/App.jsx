@@ -40,6 +40,8 @@ import { ShopVerificationPage } from './pages/admin/ShopVerificationPage';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
 import { CategoryAdminPage } from './pages/admin/CategoryAdminPage';
 import { AdminReportsPage } from './pages/admin/AdminReportsPage';
+import { AdminProductsPage } from './pages/admin/AdminProductsPage';
+import { AdminGeoSalesMapPage } from './pages/admin/AdminGeoSalesMapPage';
 
 // Enhanced Seamless Protected Route Wrapper
 const ProtectedRoute = ({ children, allowedRoles, targetPersona = 'customer' }) => {
@@ -214,6 +216,14 @@ export default function App() {
             }
           />
           <Route
+            path="/admin/map"
+            element={
+              <ProtectedRoute allowedRoles={['admin']} targetPersona="admin">
+                <AdminGeoSalesMapPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/shops"
             element={
               <ProtectedRoute allowedRoles={['admin']} targetPersona="admin">
@@ -233,7 +243,7 @@ export default function App() {
             path="/admin/products"
             element={
               <ProtectedRoute allowedRoles={['admin']} targetPersona="admin">
-                <PublicProductsPage />
+                <AdminProductsPage />
               </ProtectedRoute>
             }
           />
