@@ -51,7 +51,9 @@ export const IncomingRequestCard = ({ requestItem, onRespondClick }) => {
           <div>
             <span className="text-slate-400 font-medium">Customer Budget:</span>
             <p className="font-bold text-slate-800">
-              {requestItem.budget ? `₹${requestItem.budget}` : 'Flexible'}
+              {(requestItem.expectedBudget ?? requestItem.expected_budget ?? requestItem.budget) != null
+                ? `₹${requestItem.expectedBudget ?? requestItem.expected_budget ?? requestItem.budget}`
+                : 'Flexible'}
             </p>
           </div>
 
@@ -72,9 +74,9 @@ export const IncomingRequestCard = ({ requestItem, onRespondClick }) => {
         </div>
 
         {/* Note */}
-        {requestItem.note && (
+        {(requestItem.notes || requestItem.note) && (
           <p className="text-xs text-slate-600 italic mt-2.5 bg-brand-50/50 p-2.5 rounded-xl border border-brand-100">
-            Note: "{requestItem.note}"
+            Note: "{requestItem.notes || requestItem.note}"
           </p>
         )}
 

@@ -6,7 +6,15 @@ import { FALLBACK_CUSTOMER_REQUESTS, FALLBACK_PRODUCTS, FALLBACK_RESERVATIONS, F
 // @access  Private (Customer)
 export const createRequest = async (req, res, next) => {
   try {
-    const { productName, category, quantity, unit, expectedBudget, urgency, notes } = req.body;
+    const {
+      productName,
+      category,
+      quantity,
+      unit,
+      urgency,
+    } = req.body;
+    const expectedBudget = req.body.expectedBudget ?? req.body.budget;
+    const notes = req.body.notes ?? req.body.note;
 
     if (!productName || !category) {
       return res.status(400).json({ success: false, message: 'Product name and category are required' });
@@ -22,7 +30,10 @@ export const createRequest = async (req, res, next) => {
             category,
             quantity: parseInt(quantity) || 1,
             unit: unit || 'piece',
-            expected_budget: expectedBudget ? parseFloat(expectedBudget) : null,
+            expected_budget:
+              expectedBudget !== null && expectedBudget !== undefined && expectedBudget !== ''
+                ? parseFloat(expectedBudget)
+                : null,
             urgency: urgency || 'today',
             notes,
             status: 'ACTIVE',
@@ -64,7 +75,14 @@ export const createRequest = async (req, res, next) => {
       category,
       quantity: parseInt(quantity) || 1,
       unit: unit || 'piece',
-      expectedBudget: expectedBudget ? parseFloat(expectedBudget) : 0,
+      expectedBudget:
+        expectedBudget !== null && expectedBudget !== undefined && expectedBudget !== ''
+          ? parseFloat(expectedBudget)
+          : null,
+      customerOffer:
+        expectedBudget !== null && expectedBudget !== undefined && expectedBudget !== ''
+          ? parseFloat(expectedBudget)
+          : null,
       urgency: urgency || 'today',
       notes,
       status: 'ACTIVE',
@@ -428,13 +446,16 @@ export const getShopRelevantRequests = async (req, res, next) => {
             quantity: r.quantity || 1,
             unit: r.unit || 'piece',
             shopStock: match ? match.quantity_in_stock : 10,
-            customerOffer: (r.expected_budget !== null && r.expected_budget !== undefined && Number(r.expected_budget) > 0) ? Number(r.expected_budget) : (match ? Math.round(match.price * 0.9) : 60),
+            customerOffer: r.expected_budget,
+            expectedBudget: r.expected_budget,
+            budget: r.expected_budget,
             currentPrice: match ? match.price : (r.expected_budget ? Math.round(r.expected_budget * 1.1) : 70),
             status: r.status === 'ACTIVE' ? 'PENDING' : r.status,
             urgency: r.urgency || 'today',
             customerName: r.customer?.name || 'Customer',
             customerPhone: r.customer?.phone || '+91 9876543210',
             notes: r.notes || '',
+            note: r.notes || '',
             createdAt: r.created_at,
             customerId: r.customer_id,
             customer: { id: r.customer_id, name: r.customer?.name, phone: r.customer?.phone },
@@ -442,8 +463,10 @@ export const getShopRelevantRequests = async (req, res, next) => {
               {
                 sender: 'customer',
                 senderName: r.customer?.name || 'Customer',
-                offer: r.expected_budget || 60,
-                message: `Can you offer for ₹${r.expected_budget || 60}?`,
+                offer: r.expected_budget,
+                message: r.expected_budget !== null && r.expected_budget !== undefined
+                  ? `Can you offer for ₹${r.expected_budget}?`
+                  : 'Customer did not specify a budget.',
                 time: r.created_at,
               }
             ],
@@ -969,4 +992,3 @@ export const confirmBargainDeal = async (req, res, next) => {
 // Aliases for backwards compatibility
 export const createBroadcastRequest = createRequest;
 export const getShopRequestsInbox = getShopRelevantRequests;
-

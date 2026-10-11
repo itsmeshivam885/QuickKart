@@ -33,7 +33,6 @@ export const CustomerRequestCard = ({
     quantity = 1,
     unit = 'piece',
     shopStock = 0,
-    customerOffer = 0,
     currentPrice = 0,
     status = 'PENDING',
     createdAt,
@@ -42,6 +41,9 @@ export const CustomerRequestCard = ({
     notes,
     negotiationHistory = [],
   } = request;
+  const customerOffer =
+    request.customerOffer ?? request.expectedBudget ?? request.expected_budget ?? request.budget;
+  const agreedPrice = request.agreedPrice ?? customerOffer ?? currentPrice;
 
   const handleOpenChat = async () => {
     try {
@@ -230,7 +232,9 @@ export const CustomerRequestCard = ({
             </span>
             <div className="flex items-baseline gap-1">
               <span className="text-base font-black text-brand-600">
-                ₹{customerOffer}
+                {customerOffer !== null && customerOffer !== undefined
+                  ? `₹${customerOffer}`
+                  : 'Flexible'}
               </span>
               <span className="text-[10px] text-slate-400 font-medium">/ unit</span>
             </div>
@@ -294,7 +298,9 @@ export const CustomerRequestCard = ({
               className="flex-1 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 transition-all flex items-center justify-center gap-1"
             >
               <Check className="w-3.5 h-3.5" />
-              Accept ₹{customerOffer}
+              {customerOffer !== null && customerOffer !== undefined
+                ? `Accept ₹${customerOffer}`
+                : 'Accept Offer'}
             </button>
 
             {/* Bargain Button */}
@@ -328,10 +334,10 @@ export const CustomerRequestCard = ({
             <div className="flex items-center justify-between gap-2">
               <div className="text-xs font-bold text-slate-700 flex items-center gap-2">
                 <span className="text-[10px] uppercase tracking-[0.16em] text-slate-400">Agreed</span>
-                <span className="text-emerald-700">₹{(request.agreedPrice || customerOffer).toLocaleString('en-IN')} / unit</span>
+                <span className="text-emerald-700">₹{agreedPrice.toLocaleString('en-IN')} / unit</span>
               </div>
               <div className="text-[10px] font-semibold text-slate-500">
-                Total: ₹{((request.agreedPrice || customerOffer) * quantity).toLocaleString('en-IN')}
+                Total: ₹{(agreedPrice * quantity).toLocaleString('en-IN')}
               </div>
             </div>
             <button
